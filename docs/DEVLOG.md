@@ -70,3 +70,17 @@
   owner's manual check. Page numbers are PDF page numbers, not printed ones.
 - Explain-it: dev/test split → tune on dev only, so test numbers aren't fitted to the test;
   unanswerable questions → measure refusals, the main safety property of a compliance tool.
+
+## 2026-11-20 — M3: baseline retrieval and embedding benchmark (D-11)
+
+- Retrieval: sentence-transformers embeddings with family prefixes (bge instruction, e5
+  query:/passage:), FAISS IndexFlatIP (native format + JSON), BM25 rebuilt in memory, RRF k=60.
+- The three candidates share the BERT uncased vocabulary: identical token counts on all 681
+  chunks, and a byte-identical chunks.parquet under each tokenizer → a fair, same-chunks benchmark.
+- Dev results (18 answerable, 1 question = 5.6 pts): all three hybrids Hit@5 0.94; MRR@10
+  e5 0.842, bge 0.826, MiniLM 0.746 → rule picks `intfloat/e5-small-v2`. The e5–bge gap is less
+  than one question's worth — practically a tie on this small set.
+- Hybrid lowers Hit@1 vs dense alone for bge/e5 (BM25 lifts weaker chunks) — reranker (M4) next.
+- Explain-it examples: BM25 beats dense on G-013 (exact words "failed login attempts locked");
+  dense beats BM25 on G-003 (paraphrase of "Product Quality Review … annually").
+  Only hybrid miss in top 5: G-010, a cross-document comparison question (first hit at rank 8).

@@ -26,7 +26,7 @@ class FakeModel:
     def __init__(self):
         self.seen: list[str] = []
 
-    def get_sentence_embedding_dimension(self):
+    def get_embedding_dimension(self):
         return self.dim
 
     def encode(self, texts, batch_size, normalize_embeddings, convert_to_numpy,

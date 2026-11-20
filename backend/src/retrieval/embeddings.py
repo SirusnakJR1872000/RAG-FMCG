@@ -44,7 +44,7 @@ class Embedder:
 
     @property
     def dim(self) -> int:
-        return int(self.model.get_sentence_embedding_dimension())
+        return int(self.model.get_embedding_dimension())  # sentence-transformers ≥ 6 name
 
     def _encode(self, texts: Sequence[str], show_progress: bool = False) -> np.ndarray:
         vectors = self.model.encode(
