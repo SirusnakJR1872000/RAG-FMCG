@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | PROJECT_SPEC.md |
-| **Version** | 6.0 — Baseline |
+| **Version** | 6.1 — Baseline + amendments A-01, A-02 |
 | **Owner** | Gaurav Patil |
 | **Date** | 20 November 2026 |
 | **Status** | **Approved baseline — single source of truth** |
@@ -405,7 +405,9 @@ At least 4 SOPs must deliberately cover the same topic as a public guideline (e.
 
 ### 7.2 Section detection
 - Section headings are recognised by numbered patterns at line start: `1.`, `8.1`, `8.1.2`, `Annex 2`, `Article 5`, `§ 11.10`, and Markdown `#` headings.
+- **[A-01]** Also recognised: Roman-numeral headings `IV.`; letter headings `C.`, only inside a Roman-numbered section; and Roman.number annex headings `I.1`. Nested labels are joined, e.g. FDA `IV.` → `C.` → `2.` is section `IV.C.2`. A marker alone on its line takes its title from the next line. Table-of-contents pages (lines with dot leaders) are not headings and are excluded from chunking.
 - Each chunk records the deepest section number it belongs to and the section title (e.g. `8.1 — Production Operations`).
+- **[A-02]** A chunk formed by merging adjacent small sections records the range of sections it covers, e.g. `11.14–11.16`, with the title of their common parent heading.
 
 ### 7.3 Chunking rules (token-bounded)
 - Length is measured with **the tokenizer of the selected embedding model**, not characters.
@@ -1439,7 +1441,8 @@ The system is **designed to support** these requirements. Site validation, SOPs 
 
 | ID | Date | Section | Change | Reason | Evidence |
 |---|---|---|---|---|---|
-| — | — | — | *(no amendments yet)* | — | — |
+| A-01 | 2026-11-20 | §7.2 | Added Roman-numeral, letter (inside Roman sections) and Roman.number heading patterns; nested labels joined (`IV.C.2`); marker-only lines take the next line as title; table-of-contents pages excluded | The §7.2 patterns missed every section of `FDA-PV-2011` and `FDA-P11-2003` (numbered `IV.` / `C.` / `2.`) and the ICH Q9(R1) annexes (`I.1`), so their chunks could not be cited by section. TOC lines with dot leaders were detected as headings (ICH Q7's TOC would start the document at section 18) | Heading scan of the loaded corpus, M1 step 4 (`docs/DEVLOG.md`, 2026-11-20) |
+| A-02 | 2026-11-20 | §7.2 | A chunk merged from several small sections records their range (e.g. `11.14–11.16`) and the common parent's title | "Deepest section number" is undefined for a merged chunk; a range keeps paragraph-level citations (e.g. ICH Q7 §11.15) exact for display and evaluation | Owner decision, M1 step 4 |
 
 ---
 
@@ -1474,4 +1477,4 @@ This baseline fixes the following errors and inconsistencies in v5:
 
 ---
 
-*End of PROJECT_SPEC.md — Version 6.0 Baseline*
+*End of PROJECT_SPEC.md — Version 6.1 (Baseline 6.0 + A-01, A-02)*
