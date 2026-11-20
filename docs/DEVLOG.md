@@ -16,3 +16,14 @@
   mockup is style-only; no landing page is built (spec §18.1). No frontend code written (M8).
 - `backend/pyproject.toml`: added `asyncio_default_fixture_loop_scope = "function"` (one line beyond
   START_HERE §4.7) to silence the pytest-asyncio deprecation warning and pin per-test event loops.
+
+## 2026-11-20 — M1 step 1–2: config, manifest, public PDFs, fictional SOPs
+
+- `config.py` (pydantic-settings, spec §26) and a validated manifest loader (§6.2/§6.4).
+- `download_docs.py` fetched all 7 public PDFs from the URLs in the manifest. WHO had moved its
+  file; the current link came from WHO's own publication page. Manifest versions/dates were checked
+  against each PDF; FDA/WHO give only a month/year, so the date uses the first day and says so.
+- Wrote the 12 fictional SOPs (§6.3), cross-referenced (OOS → deviation → CAPA → change control).
+  Every guidance citation in them was checked against the real section headings in the PDFs.
+- Learned: FDA guidances number sections `IV.` / `C.` / `2.` — not covered by the §7.2 heading
+  patterns. Must be handled (or the spec amended) when building the chunker in step 4.

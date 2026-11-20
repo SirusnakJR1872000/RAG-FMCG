@@ -80,3 +80,89 @@
   publisher: WHO
   source_url: https://cdn.who.int/media/docs/default-source/medicines/norms-and-standards/guidelines/inspections/trs986annex2.pdf
   status: active
+
+# ── Internal SOPs (fictional, committed) ──
+- doc_code: ACME-SOP-IT-003
+  title: "Audit Trail Review for Computerised Systems"
+  version: "1.4"
+  effective_date: 2026-04-20
+  file: sops/SOP-IT-003_Audit_Trail_Review.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-IT-006
+  title: "User Access Management for GxP Systems"
+  version: "2.0"
+  effective_date: 2026-05-11
+  file: sops/SOP-IT-006_User_Access_Management.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-PR-004
+  title: "Batch Record Review and Release Support"
+  version: "4.0"
+  effective_date: 2025-07-21
+  file: sops/SOP-PR-004_Batch_Record_Review.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QA-001
+  title: "Document Control"
+  version: "5.0"
+  effective_date: 2025-11-03
+  file: sops/SOP-QA-001_Document_Control.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QA-005
+  title: "Deviation Management"
+  version: "4.1"
+  effective_date: 2025-09-15
+  file: sops/SOP-QA-005_Deviation_Management.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QA-008
+  title: "CAPA Management"
+  version: "3.2"
+  effective_date: 2025-10-01
+  file: sops/SOP-QA-008_CAPA_Management.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QA-012
+  title: "Change Control"
+  version: "6.0"
+  effective_date: 2026-02-02
+  file: sops/SOP-QA-012_Change_Control.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QA-015
+  title: "Product Quality Review"
+  version: "2.0"
+  effective_date: 2025-06-30
+  file: sops/SOP-QA-015_Product_Quality_Review.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QA-019
+  title: "Supplier Qualification"
+  version: "3.0"
+  effective_date: 2025-08-18
+  file: sops/SOP-QA-019_Supplier_Qualification.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QC-007
+  title: "Out-of-Specification (OOS) Investigation"
+  version: "3.0"
+  effective_date: 2026-01-15
+  file: sops/SOP-QC-007_OOS_Investigation.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-QC-011
+  title: "Analytical Data Review"
+  version: "2.3"
+  effective_date: 2025-12-01
+  file: sops/SOP-QC-011_Analytical_Data_Review.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
+- doc_code: ACME-SOP-VA-002
+  title: "Process Validation Lifecycle"
+  version: "2.1"
+  effective_date: 2026-03-09
+  file: sops/SOP-VA-002_Process_Validation_Lifecycle.md
+  publisher: "Acme Pharma Ltd. (fictional)"
+  status: active
