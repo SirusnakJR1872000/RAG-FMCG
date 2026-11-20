@@ -1,0 +1,36 @@
+# Direct runtime dependencies (minimum versions). Exact versions: requirements.lock.
+# Component choices are fixed by PROJECT_SPEC §5.
+
+# CPU-only PyTorch wheel (no CUDA libraries) — this machine has no GPU.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.15.0
+
+# AI / ML (§5.4)
+sentence-transformers>=6.3.0
+faiss-cpu>=1.16.0
+rank-bm25>=0.2.2
+pymupdf>=2.1
+numpy>=2.5.5
+
+# Data files (§5.4)
+pyarrow>=26.0.1
+pandas>=3.1.1
+
+# Web / API (§5.2)
+fastapi>=0.165.0
+uvicorn[standard]>=0.54.0
+pydantic-settings>=2.16.3
+sqlalchemy>=2.1.9
+httpx>=0.28.1
+structlog>=26.1.0
+python-multipart>=0.0.34
+pyyaml>=6.0.3
+
+# Security (§5.3)
+pyjwt>=2.15.1
+argon2-cffi>=25.1.0
+slowapi>=0.1.10
+
+# Utilities (scripts: document download, progress bars)
+requests>=2.34.2
+tqdm>=4.70.1

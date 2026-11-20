@@ -1,0 +1,26 @@
+# Corpus manifest — the single source of document metadata (PROJECT_SPEC §6.2).
+# Ingestion refuses any file that is not listed here. Loaded with yaml.safe_load only.
+# At ingestion the SHA-256 of each file is computed and stored; a file whose hash
+# differs from the registered hash for the same doc_code + version is rejected
+# (a changed file requires a new version).
+#
+# Entry format:
+#
+# - doc_code: ICH-Q7
+#   title: "Good Manufacturing Practice Guide for Active Pharmaceutical Ingredients"
+#   version: "Step 4, 10 Nov 2000"
+#   effective_date: 2000-11-10
+#   file: public/ICH_Q7.pdf
+#   publisher: ICH
+#   source_url: <official URL>
+#   status: active
+# - doc_code: ACME-SOP-QC-007
+#   title: "Out-of-Specification (OOS) Investigation"
+#   version: "3.0"
+#   effective_date: 2026-01-15
+#   file: sops/SOP-QC-007_OOS_Investigation.md
+#   publisher: "Acme Pharma Ltd. (fictional)"
+#   status: active
+#
+# No entries yet — documents are added in milestone M1.
+[]
