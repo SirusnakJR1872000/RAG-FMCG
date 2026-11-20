@@ -54,3 +54,19 @@
   with the bge-small tokenizer (special tokens included). 20 random chunks checked by hand: clean.
 - Explain-it: sections instead of fixed windows → citations point to a real clause and a chunk
   never mixes two topics; overlap → a sentence cut at a window edge still has its context.
+
+## 2026-11-20 — M2: golden evaluation set (draft, awaiting owner review)
+
+- `backend/tests/golden/golden_set.jsonl`: 50 questions written before any retrieval code —
+  30 public / 15 SOP / 5 unanswerable; 20 dev / 30 test; direct, paraphrased, section-specific
+  and cross-document styles in both splits. Key facts taken from the source text.
+- Unanswerable questions checked absent from the corpus; two are near-misses on purpose
+  (ICH Q12 appears only in a Q9(R1) reference list; "particle" only as particle size).
+- `src/evaluation/golden.py`: schema, composition rules and the §11.1 hit rule using each
+  document's real section tree (ICH Q7 11.15 is under 11.1; WHO 1.10 is NOT under 1.1;
+  merged ranges count as each member).
+- Integration test proves every expected section exists and is carried by a chunk (no retrieval).
+- `docs/golden_review.md` (generated): question + PDF page + source excerpt + checkbox for the
+  owner's manual check. Page numbers are PDF page numbers, not printed ones.
+- Explain-it: dev/test split → tune on dev only, so test numbers aren't fitted to the test;
+  unanswerable questions → measure refusals, the main safety property of a compliance tool.
