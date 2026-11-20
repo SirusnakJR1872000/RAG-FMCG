@@ -38,3 +38,19 @@
   skipped. A bare "10" on ICH Q7 p2 is a split date in the history table — correctly kept.
 - Limitation (explain-it): a genuine line that repeats at the top/bottom of most pages (e.g. a
   table header on every page) would also be stripped; a lone number at a page edge counts as one.
+
+## 2026-11-20 — M1 step 4: section detection and chunker (spec v6.2)
+
+- Spec amendments approved: A-01 (Roman/letter headings for FDA, `I.1` annex headings, TOC pages
+  dropped), A-02 (merged chunks record a range, e.g. `11.14–11.16`), A-03 (digit runs; odd/even
+  running headers — WHO alternates `Annex 2` / `WHO Technical Report Series`, each exactly 50%).
+- `sections.py`: numbered headings vs numbered paragraphs; guards so footnotes, wrapped numbers,
+  numbered lists and reference lists don't become sections. Built against the real corpus, one
+  document type at a time (ICH ALL-CAPS chapters, ICH Q7 paragraph numbering 8.31 → 8.3, FDA
+  Roman/letter, WHO sentence case, Markdown SOPs).
+- Found FDA Part 11 has margin line numbers on every line (76, 77, 78…) — removed in the loader
+  when bare numbers count up by one; TOC page references are kept.
+- `chunker.py` + `scripts/build_chunks.py`: 681 chunks from 19 documents in ~5 s, max 256 tokens
+  with the bge-small tokenizer (special tokens included). 20 random chunks checked by hand: clean.
+- Explain-it: sections instead of fixed windows → citations point to a real clause and a chunk
+  never mixes two topics; overlap → a sentence cut at a window edge still has its context.

@@ -21,6 +21,8 @@ EDGE_LINES = 3  # top/bottom lines inspected on each page (§7.1)
 REPEAT_SHARE = 0.5  # a pattern must appear on MORE than this share of pages (§7.1)
 MIN_PAGE_CHARS = 100  # pages with less text are skipped and logged (§7.1)
 MIN_PAGES_FOR_STRIPPING = 3  # with 1–2 pages "more than 50%" would strip every title line
+MIN_LINE_NUMBERS = 10  # a page needs this many bare numbers to have margin line numbering…
+LINE_NUMBER_STEP_SHARE = 0.8  # …and most consecutive pairs must count up by exactly one
 
 
 def line_key(line: str) -> str:
@@ -36,14 +38,38 @@ def _edge_indexes(n_lines: int) -> set[int]:
     return set(range(min(EDGE_LINES, n_lines))) | set(range(max(0, n_lines - EDGE_LINES), n_lines))
 
 
-def find_repeated_lines(pages: list[list[str]]) -> set[str]:
-    """Keys of lines that appear in the top/bottom lines of more than half the pages."""
+def _repeated_in(pages: list[list[str]]) -> set[str]:
     if len(pages) < MIN_PAGES_FOR_STRIPPING:
         return set()
     counts: Counter[str] = Counter()
     for lines in pages:
         counts.update({line_key(lines[i]) for i in _edge_indexes(len(lines))})
     return {key for key, n in counts.items() if key and n > REPEAT_SHARE * len(pages)}
+
+
+def find_repeated_lines(pages: list[list[str]]) -> set[str]:
+    """Keys of lines in the top/bottom lines of more than half the pages (§7.1, A-03).
+
+    Checked over all pages, and over odd and even pages separately: book-style documents
+    (e.g. WHO TRS) put one running header on odd pages and another on even pages, so each
+    appears on only ~50% of all pages.
+    """
+    return _repeated_in(pages) | _repeated_in(pages[0::2]) | _repeated_in(pages[1::2])
+
+
+def strip_line_numbers(lines: list[str]) -> list[str]:
+    """Remove margin line numbers (FDA Part 11 numbers every line: 76, 77, 78…).
+
+    Only a long run of bare numbers that mostly count up by one is treated as line numbering;
+    scattered numbers such as table-of-contents page references are kept.
+    """
+    numbers = [int(x) for x in lines if x.isdigit()]
+    if len(numbers) < MIN_LINE_NUMBERS:
+        return lines
+    steps = sum(b == a + 1 for a, b in zip(numbers, numbers[1:], strict=False))
+    if steps < LINE_NUMBER_STEP_SHARE * (len(numbers) - 1):
+        return lines
+    return [x for x in lines if not x.isdigit()]
 
 
 def strip_repeated_lines(lines: list[str], repeated: set[str]) -> list[str]:
@@ -62,7 +88,8 @@ def load_pdf(path: Path) -> LoadedDocument:
     pages: list[PageText] = []
     skipped: list[int] = []
     for number, lines in enumerate(page_lines, start=1):
-        text = normalize_text("\n".join(strip_repeated_lines(lines, repeated)))
+        kept = strip_line_numbers(strip_repeated_lines(lines, repeated))
+        text = normalize_text("\n".join(kept))
         if len(text) < MIN_PAGE_CHARS:
             skipped.append(number)
             continue
