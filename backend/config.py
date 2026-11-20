@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     llm_queue_max: int = Field(10, gt=0)
 
     # ── Retrieval ──
-    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    embedding_model: str = "intfloat/e5-small-v2"  # D-11, reports/model_benchmark.md
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     chunk_max_tokens: int = Field(256, gt=0, le=256)  # §7.3: 256 = smallest candidate max length
     chunk_overlap_tokens: int = Field(48, ge=0)
