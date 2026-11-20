@@ -22,5 +22,61 @@
 #   publisher: "Acme Pharma Ltd. (fictional)"
 #   status: active
 #
-# No entries yet — documents are added in milestone M1.
-[]
+
+# ── Public guidance (PDFs gitignored; fetched by: python -m scripts.download_docs) ──
+- doc_code: ICH-Q7
+  title: "Good Manufacturing Practice Guide for Active Pharmaceutical Ingredients"
+  version: "Step 4, 10 Nov 2000"
+  effective_date: 2000-11-10
+  file: public/ICH_Q7.pdf
+  publisher: ICH
+  source_url: https://database.ich.org/sites/default/files/Q7%20Guideline.pdf
+  status: active
+- doc_code: ICH-Q9R1
+  title: "Quality Risk Management Q9(R1)"
+  version: "Step 4, 18 Jan 2023"
+  effective_date: 2023-01-18
+  file: public/ICH_Q9R1.pdf
+  publisher: ICH
+  source_url: https://database.ich.org/sites/default/files/ICH_Q9%28R1%29_Guideline_Step4_2022_1219.pdf
+  status: active
+- doc_code: ICH-Q10
+  title: "Pharmaceutical Quality System"
+  version: "Step 4, 4 Jun 2008"
+  effective_date: 2008-06-04
+  file: public/ICH_Q10.pdf
+  publisher: ICH
+  source_url: https://database.ich.org/sites/default/files/Q10%20Guideline.pdf
+  status: active
+- doc_code: FDA-PV-2011
+  title: "Process Validation: General Principles and Practices"
+  version: "Revision 1, January 2011"
+  effective_date: 2011-01-01   # PDF states "January 2011" only (month precision)
+  file: public/FDA_Process_Validation_2011.pdf
+  publisher: US FDA
+  source_url: https://www.fda.gov/media/71021/download
+  status: active
+- doc_code: FDA-P11-2003
+  title: "Part 11, Electronic Records; Electronic Signatures — Scope and Application"
+  version: "August 2003"
+  effective_date: 2003-08-01   # PDF states "August 2003" only (month precision)
+  file: public/FDA_Part11_Scope_2003.pdf
+  publisher: US FDA
+  source_url: https://www.fda.gov/media/75414/download
+  status: active
+- doc_code: EU-ANNEX11
+  title: "EU GMP Annex 11: Computerised Systems"
+  version: "Rev. 1, 2011"
+  effective_date: 2011-06-30
+  file: public/EU_GMP_Annex11.pdf
+  publisher: European Commission
+  source_url: https://health.ec.europa.eu/system/files/2016-11/annex11_01-2011_en_0.pdf
+  status: active
+- doc_code: WHO-GMP-MAIN
+  title: "WHO Good Manufacturing Practices for Pharmaceutical Products: Main Principles"
+  version: "TRS 986, Annex 2 (2014)"
+  effective_date: 2014-01-01   # PDF states "TRS 986, 2014" only (year precision)
+  file: public/WHO_TRS986_Annex2.pdf
+  publisher: WHO
+  source_url: https://cdn.who.int/media/docs/default-source/medicines/norms-and-standards/guidelines/inspections/trs986annex2.pdf
+  status: active
