@@ -5,7 +5,7 @@ import pytest
 
 from src.ingestion.md_loader import load_markdown
 from src.ingestion.normalize import normalize_text
-from src.ingestion.pdf_loader import line_key, load_pdf
+from src.ingestion.pdf_loader import line_key, load_pdf, strip_line_numbers
 
 BODY = (
     "Quality should be the responsibility of all persons involved in manufacturing. "
@@ -99,6 +99,26 @@ def test_short_pages_skipped_and_reported(tmp_path):
     doc = load_pdf(make_pdf(tmp_path / "d.pdf", pages))
     assert doc.skipped_pages == [2]
     assert [p.page for p in doc.pages] == [1, 3, 4]
+
+
+def test_A03_alternating_odd_even_headers_removed(tmp_path):
+    # book layout: "Annex 2" on odd pages, the series title on even pages (50% each)
+    pages = [
+        (["Annex 2"] if n % 2 else ["WHO Technical Report Series"]) + body_lines(n) + [str(n)]
+        for n in range(1, 9)
+    ]
+    doc = load_pdf(make_pdf(tmp_path / "w.pdf", pages))
+    assert {"Annex #", "WHO Technical Report Series"} <= set(doc.removed_lines)
+    assert not any("Annex 2" in p.text or "Report Series" in p.text for p in doc.pages)
+    assert all("should be approved by the quality unit" in p.text for p in doc.pages)
+
+
+def test_margin_line_numbers_removed_but_toc_page_numbers_kept():
+    numbered = [x for n in range(76, 90) for x in (str(n), f"Sentence on line {n}.")]
+    assert strip_line_numbers(numbered) == [f"Sentence on line {n}." for n in range(76, 90)]
+    toc = [x for n, pg in enumerate([79, 80, 81, 85, 85, 88, 92, 95, 99, 99, 103, 104])
+           for x in (f"Entry {n}", str(pg))]
+    assert strip_line_numbers(toc) == toc  # page references don't count up by one
 
 
 def test_no_stripping_for_very_short_documents(tmp_path):
