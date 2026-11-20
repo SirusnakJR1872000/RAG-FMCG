@@ -56,7 +56,7 @@ class Settings(BaseSettings):
 
     # ── Retrieval ──
     embedding_model: str = "intfloat/e5-small-v2"  # D-11, reports/model_benchmark.md
-    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # D-13 (reranker_benchmark.md)
     chunk_max_tokens: int = Field(256, gt=0, le=256)  # §7.3: 256 = smallest candidate max length
     chunk_overlap_tokens: int = Field(48, ge=0)
     candidates_per_retriever: int = Field(20, gt=0)

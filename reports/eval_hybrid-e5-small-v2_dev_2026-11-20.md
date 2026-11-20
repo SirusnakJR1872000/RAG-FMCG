@@ -1,10 +1,10 @@
 # Evaluation: hybrid-e5-small-v2 (dev)
 
-Git commit `c48c98c` · 18 answerable questions (one question = 5.6 points)
+Git commit `15a499f` · 18 answerable questions (one question = 5.6 points)
 
-| Retriever | Embedding model | Hit@1 | Hit@5 | MRR@10 | s/query |
-|---|---|---|---|---|---|
-| hybrid | intfloat/e5-small-v2 | 0.78 | 0.94 | 0.84 | 0.12 |
+| Retriever | Embedding model | Reranker | Hit@1 | Hit@5 | MRR@10 | retrieval p50 ms | rerank p50 / p90 ms |
+|---|---|---|---|---|---|---|---|
+| hybrid | e5-small-v2 | — | 0.78 | 0.94 | 0.84 | 14 | — |
 
 ## Questions not hit in the top 5
 

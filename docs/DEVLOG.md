@@ -84,3 +84,18 @@
 - Explain-it examples: BM25 beats dense on G-013 (exact words "failed login attempts locked");
   dense beats BM25 on G-003 (paraphrase of "Product Quality Review … annually").
   Only hybrid miss in top 5: G-010, a cross-document comparison question (first hit at rank 8).
+
+## 2026-11-20 — M4: reranker (D-13)
+
+- Cross-encoder re-sorts the top-20 hybrid candidates (e5-small-v2). Dev, 18 answerable:
+  no reranker Hit@1 0.78 / Hit@5 0.94 / MRR@10 0.84;
+  ms-marco-MiniLM-L-6-v2 → 0.94 / 0.94 / 0.95, +787 ms p50 (860 ms p90) per question;
+  bge-reranker-base → 0.83 / 0.94 / 0.88, +6,184 ms p50 — over the 2 s budget, excluded.
+- D-13 picks ms-marco (it was already the default; now confirmed by measurement).
+- Hit@5 can't rise: reranking only re-orders retrieved candidates. G-010 (cross-document
+  comparison) moved 8 → 6; its top chunks are SOP references/scope that only *mention* ICH Q7.
+- Score scales differ (ms-marco logits vs bge sigmoid) → τ (§8.5) is tuned for ms-marco.
+- Latency measured with other apps running (8 of 15 GB RAM in use, load ~1.2).
+- Explain-it: bi-encoder = question and chunk encoded separately (vectors precomputed, fast
+  search over all chunks); cross-encoder = reads both together (more accurate, but one model
+  pass per pair) → only affordable on ~20 candidates, never on the whole corpus.
