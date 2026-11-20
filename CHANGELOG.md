@@ -11,3 +11,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Project specification v6.0, START_HERE tracker and UI/system overview.
 - Settings module, validated corpus manifest and public document downloader (M1).
 - 12 fictional internal SOPs for Acme Pharma Ltd. (M1).
+- PDF loader with header/footer stripping and Markdown loader (M1).

@@ -27,3 +27,14 @@
   Every guidance citation in them was checked against the real section headings in the PDFs.
 - Learned: FDA guidances number sections `IV.` / `C.` / `2.` — not covered by the §7.2 heading
   patterns. Must be handled (or the spec amended) when building the chunker in step 4.
+
+## 2026-11-20 — M1 step 3: PDF and Markdown loaders
+
+- `pdf_loader.py` (text per page, header/footer stripping, <100-char pages skipped), `md_loader.py`
+  (whole file as one page, page=None) and shared `normalize.py` (NFKC, hyphen rejoin, whitespace).
+- Bug found by a test: replacing each digit by `#` gives "Page 9" → `#` but "Page 10" → `##`, so
+  footers on pages 1–9 never passed the 50% threshold. Fixed by replacing each *run* of digits.
+- Real corpus: running titles + page numbers removed from 6/7 PDFs (Annex 11 has none); WHO p60
+  skipped. A bare "10" on ICH Q7 p2 is a split date in the history table — correctly kept.
+- Limitation (explain-it): a genuine line that repeats at the top/bottom of most pages (e.g. a
+  table header on every page) would also be stripped; a lone number at a page edge counts as one.
