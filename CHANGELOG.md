@@ -16,3 +16,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Spec v6.2: amendments A-01 to A-03 (§7.1, §7.2).
 - Golden evaluation set (50 questions), validator, hit rule and review sheet (M2).
 - Retrieval baseline (BM25, FAISS, RRF), evaluation runner and D-11 benchmark; `EMBEDDING_MODEL` set to `intfloat/e5-small-v2` (M3).
+- Cross-encoder reranker and D-13 benchmark; `cross-encoder/ms-marco-MiniLM-L-6-v2` confirmed (M4).

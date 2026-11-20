@@ -1,0 +1,355 @@
+{
+  "config": "hybrid-e5-small-v2+rerank-bge-reranker-base",
+  "split": "dev",
+  "retriever": "hybrid",
+  "embedding_model": "intfloat/e5-small-v2",
+  "reranker_model": "BAAI/bge-reranker-base",
+  "metrics": {
+    "n": 18,
+    "hit@1": 0.8333333333333334,
+    "hit@5": 0.9444444444444444,
+    "mrr@10": 0.8829365079365079
+  },
+  "latency_ms": {
+    "retrieval": {
+      "p50": 28.5,
+      "p90": 54.2
+    },
+    "rerank": {
+      "p50": 6183.8,
+      "p90": 6652.2
+    }
+  },
+  "git_commit": "15a499f",
+  "build_info": {
+    "build_id": "4f10ee4c-b922-4fc5-9623-aa82e898708a",
+    "created_at": "2026-11-20T11:14:45+00:00",
+    "git_commit": "c48c98c",
+    "embedding_model": "intfloat/e5-small-v2",
+    "embedding_model_hash": "hf:ffb93f3bd4047442299a41ebb6fa998a38507c52",
+    "dimension": 384,
+    "chunk_count": 681,
+    "chunks_sha256": "8c8568769aeddaf58f3ba361ecb1f70d8c476461a293680a02577d8c47362dac",
+    "embed_seconds": 63.1,
+    "documents": [
+      {
+        "doc_code": "ICH-Q7",
+        "version": "Step 4, 10 Nov 2000",
+        "doc_sha256": "f28aff02d31b7edf6ed3026971a2283019ad51393165ffbc5efb5ae7208e1f1e"
+      },
+      {
+        "doc_code": "ICH-Q9R1",
+        "version": "Step 4, 18 Jan 2023",
+        "doc_sha256": "3bbc860385b2630372c81eebb82ba74ae643ef383ce94b5e01d26bbd0b9883fb"
+      },
+      {
+        "doc_code": "ICH-Q10",
+        "version": "Step 4, 4 Jun 2008",
+        "doc_sha256": "396b99197692a2fd386089b886dc7345e22b726fd6ebd0bbb5d2a0173b0ec292"
+      },
+      {
+        "doc_code": "FDA-PV-2011",
+        "version": "Revision 1, January 2011",
+        "doc_sha256": "821788a1127a9215670e60a7010e35bf2eafb408cf346e74440fb73a01869792"
+      },
+      {
+        "doc_code": "FDA-P11-2003",
+        "version": "August 2003",
+        "doc_sha256": "306013031df65004566799023444b3fd66d17dca72eea4c7eb5bacfd4a697ac5"
+      },
+      {
+        "doc_code": "EU-ANNEX11",
+        "version": "Rev. 1, 2011",
+        "doc_sha256": "8ec11211ba33bf88ad4e71acc6bf60fd0e7823cfa495b116872e2c287e4aebbb"
+      },
+      {
+        "doc_code": "WHO-GMP-MAIN",
+        "version": "TRS 986, Annex 2 (2014)",
+        "doc_sha256": "58713f011dee8f33d76634255acd7782fe45b61329c86817e5fbd4030aea3745"
+      },
+      {
+        "doc_code": "ACME-SOP-IT-003",
+        "version": "1.4",
+        "doc_sha256": "36fc36ce08294a831e0fd98681db7a01dbc01616227f94992277ff4c86dd60e9"
+      },
+      {
+        "doc_code": "ACME-SOP-IT-006",
+        "version": "2.0",
+        "doc_sha256": "efcafc3d8bb0def7c3a164fe1fba4a4a2b82ab1a962d68435188b406c89255cf"
+      },
+      {
+        "doc_code": "ACME-SOP-PR-004",
+        "version": "4.0",
+        "doc_sha256": "7396a4a986ee8b980430cbc032db02ff0aed6ba3b266fee6ed095905cff2c754"
+      },
+      {
+        "doc_code": "ACME-SOP-QA-001",
+        "version": "5.0",
+        "doc_sha256": "a2c6a6d74979fcb9928a7b0a33ed61a7a4581e324b514ebedce53d6505e04a38"
+      },
+      {
+        "doc_code": "ACME-SOP-QA-005",
+        "version": "4.1",
+        "doc_sha256": "162cd0ec62efcffdf98f039ee2ead09f6caf86dde5717a375e6f4727818bd881"
+      },
+      {
+        "doc_code": "ACME-SOP-QA-008",
+        "version": "3.2",
+        "doc_sha256": "4b309e97f33222ee52048dd23b9d70700c2e8bd26be7592187f737fcf3a982f9"
+      },
+      {
+        "doc_code": "ACME-SOP-QA-012",
+        "version": "6.0",
+        "doc_sha256": "2f7acc7a688e940ba0dbdf794dd65341176f680cd05e4ea8fab9a8674e190b28"
+      },
+      {
+        "doc_code": "ACME-SOP-QA-015",
+        "version": "2.0",
+        "doc_sha256": "1ae74ec952ea200a4c562d0a1f34858f4d097aa46d842fd7aec5257cb72fa6f0"
+      },
+      {
+        "doc_code": "ACME-SOP-QA-019",
+        "version": "3.0",
+        "doc_sha256": "172f9aa01ee59370058a99d0e0a9786dda042f34821571cfc41fb173b27aa086"
+      },
+      {
+        "doc_code": "ACME-SOP-QC-007",
+        "version": "3.0",
+        "doc_sha256": "f6d109fcf084617585ef311fa5bec311cee1e48538169569553d0b386f359d3b"
+      },
+      {
+        "doc_code": "ACME-SOP-QC-011",
+        "version": "2.3",
+        "doc_sha256": "28dc139b2b191512a116fe60b99e35e98416264452cf0652592de472ad68a15c"
+      },
+      {
+        "doc_code": "ACME-SOP-VA-002",
+        "version": "2.1",
+        "doc_sha256": "3d34d518529bd4bd1a53665125854b3721be777971e17d6fca5f335818c028c0"
+      }
+    ]
+  },
+  "settings": {
+    "candidates_per_retriever": 20,
+    "rrf_k": 60,
+    "chunk_max_tokens": 256
+  },
+  "questions": [
+    {
+      "id": "G-001",
+      "question": "What must happen when an out-of-specification test result is obtained for an API?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ICH-Q7 \u00a711.13\u201311.15",
+        "ACME-SOP-QC-007 \u00a74",
+        "ICH-Q7 \u00a720",
+        "ACME-SOP-QC-007 \u00a71",
+        "ACME-SOP-QC-007 \u00a72"
+      ]
+    },
+    {
+      "id": "G-002",
+      "question": "How many working days does Acme allow for a Phase I OOS laboratory investigation?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ACME-SOP-QC-007 \u00a75.2.1\u20135.2.3",
+        "ACME-SOP-QC-007 \u00a79",
+        "ACME-SOP-QC-011 \u00a75.4.1\u20135.4.4",
+        "ACME-SOP-QC-007 \u00a73",
+        "ACME-SOP-QC-007 \u00a75.4.1\u20135.4.4"
+      ]
+    },
+    {
+      "id": "G-003",
+      "question": "how often do we have to review the quality of our APIs, and what goes into that review?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ICH-Q7 \u00a72.50\u20132.51",
+        "ICH-Q7 \u00a719.20\u201319.25",
+        "ACME-SOP-QA-001 \u00a75.5.1\u20135.5.3",
+        "WHO-GMP-MAIN \u00a71.10",
+        "ICH-Q7 \u00a711.13\u201311.15"
+      ]
+    },
+    {
+      "id": "G-004",
+      "question": "What does ICH Q10 say a CAPA system should be based on?",
+      "first_hit_rank": 4,
+      "top_sections": [
+        "ICH-Q10 \u00a75",
+        "ICH-Q10 \u00a73.2",
+        "ICH-Q10 \u00a71.1",
+        "ICH-Q10 \u00a73.2.2",
+        "ICH-Q10 \u00a73.2.2"
+      ]
+    },
+    {
+      "id": "G-006",
+      "question": "What are the three stages of process validation in the FDA guidance?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "FDA-PV-2011 \u00a7II.B",
+        "ACME-SOP-VA-002 \u00a77",
+        "FDA-PV-2011 \u00a7IV.C",
+        "FDA-PV-2011 \u00a7II.B",
+        "FDA-PV-2011 \u00a7I"
+      ]
+    },
+    {
+      "id": "G-007",
+      "question": "if a critical deviation happens, how fast do senior people need to hear about it?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ACME-SOP-QA-005 \u00a75.2",
+        "ICH-Q7 \u00a76.52\u20136.53",
+        "ACME-SOP-QA-012 \u00a76.5.1\u20136.5.3",
+        "ACME-SOP-QA-005 \u00a76.2.1\u20136.2.4",
+        "ICH-Q7 \u00a78.14\u20138.17"
+      ]
+    },
+    {
+      "id": "G-008",
+      "question": "Does EU GMP Annex 11 require audit trails?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "EU-ANNEX11 \u00a79",
+        "ACME-SOP-QC-011 \u00a78",
+        "ACME-SOP-IT-006 \u00a77",
+        "ACME-SOP-IT-003 \u00a77",
+        "ACME-SOP-QA-001 \u00a79"
+      ]
+    },
+    {
+      "id": "G-009",
+      "question": "What does ICH Q9(R1) say about formality in quality risk management?",
+      "first_hit_rank": 2,
+      "top_sections": [
+        "ICH-Q9R1 \u00a71",
+        "ICH-Q9R1 \u00a75.1",
+        "ICH-Q9R1 \u00a75.1",
+        "ICH-Q9R1 \u00a71",
+        "ICH-Q9R1 \u00a75.1"
+      ]
+    },
+    {
+      "id": "G-010",
+      "question": "Does Acme's OOS SOP align with ICH Q7 on investigating out-of-specification results?",
+      "first_hit_rank": 7,
+      "top_sections": [
+        "ACME-SOP-QC-007 \u00a71",
+        "ACME-SOP-QC-007 \u00a78",
+        "ACME-SOP-QA-005 \u00a72",
+        "ACME-SOP-PR-004 \u00a78",
+        "ICH-Q7 \u00a78.33\u20138.36"
+      ]
+    },
+    {
+      "id": "G-011",
+      "question": "how long must we keep reserve samples of an API batch?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ICH-Q7 \u00a711.70\u201311.72",
+        "ICH-Q7 \u00a719.80\u201319.82",
+        "ICH-Q7 \u00a76.10\u20136.13",
+        "ICH-Q7 \u00a711.50\u201311.54",
+        "WHO-GMP-MAIN \u00a717.21\u201317.23"
+      ]
+    },
+    {
+      "id": "G-012",
+      "question": "Under what conditions does FDA not enforce Part 11 requirements for legacy systems?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "FDA-P11-2003 \u00a7III.C.3",
+        "FDA-P11-2003 \u00a7I",
+        "FDA-P11-2003 \u00a7III.A",
+        "FDA-P11-2003 \u00a7II",
+        "FDA-P11-2003 \u00a7III.A"
+      ]
+    },
+    {
+      "id": "G-013",
+      "question": "After how many failed login attempts is a GxP user account locked at Acme?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ACME-SOP-IT-006 \u00a75.2.1\u20135.2.5",
+        "ACME-SOP-IT-003 \u00a75.3.1\u20135.3.3",
+        "ACME-SOP-IT-003 \u00a78",
+        "ACME-SOP-IT-006 \u00a71",
+        "ACME-SOP-IT-003 \u00a74"
+      ]
+    },
+    {
+      "id": "G-014",
+      "question": "How often should self-inspections be performed according to WHO GMP?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "WHO-GMP-MAIN \u00a78.1",
+        "WHO-GMP-MAIN \u00a78.4\u20138.7",
+        "WHO-GMP-MAIN \u00a79.10",
+        "ICH-Q7 \u00a72.40\u20132.41",
+        "WHO-GMP-MAIN \u00a78.2\u20138.3"
+      ]
+    },
+    {
+      "id": "G-015",
+      "question": "What should a PPQ protocol contain according to the FDA process validation guidance?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "FDA-PV-2011 \u00a7IV.C.3",
+        "FDA-PV-2011 \u00a7IV.C.2",
+        "FDA-PV-2011 \u00a7IV.C.3",
+        "FDA-PV-2011 \u00a7IV.C",
+        "FDA-PV-2011 \u00a7IV.C.2"
+      ]
+    },
+    {
+      "id": "G-016",
+      "question": "When does Acme require a CAPA to be raised after an OOS investigation?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ACME-SOP-QC-007 \u00a75.6.1\u20135.6.2",
+        "ACME-SOP-QA-008 \u00a75.1.1\u20135.1.3",
+        "ACME-SOP-QA-005 \u00a76.4.1\u20136.4.2",
+        "ACME-SOP-IT-003 \u00a75.4.1\u20135.4.3",
+        "ACME-SOP-QA-005 \u00a76.5.1\u20136.5.2"
+      ]
+    },
+    {
+      "id": "G-017",
+      "question": "What does Annex 11 require for backing up data?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "EU-ANNEX11 \u00a77.1\u20137.2",
+        "EU-ANNEX11 \u00a712.1\u201312.4",
+        "EU-ANNEX11 \u00a74.1\u20134.5",
+        "ACME-SOP-IT-006 \u00a77",
+        "ACME-SOP-QA-001 \u00a79"
+      ]
+    },
+    {
+      "id": "G-019",
+      "question": "can we put material back into the process and repeat a step?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ICH-Q7 \u00a714.20\u201314.22",
+        "ICH-Q7 \u00a720",
+        "ICH-Q7 \u00a78.50\u20138.52",
+        "ICH-Q7 \u00a71.3",
+        "ICH-Q7 \u00a71.3"
+      ]
+    },
+    {
+      "id": "G-020",
+      "question": "How many consecutive PPQ batches does Acme use by default?",
+      "first_hit_rank": 1,
+      "top_sections": [
+        "ACME-SOP-VA-002 \u00a75.2",
+        "ACME-SOP-QA-015 \u00a74.1\u20134.4",
+        "ACME-SOP-VA-002 \u00a75.4.1\u20135.4.4",
+        "ACME-SOP-VA-002 \u00a75.3.1\u20135.3.2",
+        "ACME-SOP-QA-008 \u00a79"
+      ]
+    }
+  ]
+}
