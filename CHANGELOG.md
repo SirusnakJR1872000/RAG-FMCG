@@ -14,3 +14,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - PDF loader with header/footer stripping and Markdown loader (M1).
 - Section detection and token-bounded chunker; `scripts/build_chunks.py` writes `data/chunks.parquet` (M1).
 - Spec v6.2: amendments A-01 to A-03 (§7.1, §7.2).
+- Golden evaluation set (50 questions), validator, hit rule and review sheet (M2).
