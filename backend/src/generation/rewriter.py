@@ -21,6 +21,33 @@ MAX_REWRITE_CHARS = 300  # a longer "question" is the model rambling, not a rewr
 _LEAD_IN = re.compile(r"^\s*(standalone question|rewritten question|question)\s*:\s*", re.I)
 
 
+# Words that point back at the conversation. Deliberately inclusive: a needless rewrite only
+# costs time (the prompt returns a standalone question unchanged); a missed one costs the answer.
+_REFERENCE_WORDS = frozenset({
+    "it", "its", "they", "them", "their", "this", "that", "these", "those", "same", "above",
+    "previous", "earlier", "former", "latter", "such", "one", "ones", "he", "she"})
+_FOLLOW_UP_OPENERS = ("and ", "but ", "also ", "so ", "then ", "what about", "how about", "why")
+SHORT_QUESTION_WORDS = 4  # "and retesting?" cannot be searched without its conversation
+
+
+def needs_context(question: str) -> bool:
+    """True if the question probably depends on earlier turns (pronoun, opener, or very short)."""
+    text = question.lower().strip()
+    words = re.findall(r"[a-z']+", text)
+    return (len(words) <= SHORT_QUESTION_WORDS or text.startswith(_FOLLOW_UP_OPENERS)
+            or any(w in _REFERENCE_WORDS for w in words))
+
+
+def should_rewrite(question: str, history: Sequence[Exchange], turns: int) -> bool:
+    """Rewrite only with history (§8.2 step 1) and only if the question needs it.
+
+    Found with the real model: asked to rewrite "What does Annex 11 say about audit trails?"
+    after a conversation about OOS, llama3.1:8b turned it into a question about OOS
+    documentation. A self-contained question is searched as it was typed.
+    """
+    return bool(history) and turns > 0 and needs_context(question)
+
+
 @dataclass(frozen=True)
 class Rewrite:
     question: str  # what to search with
@@ -57,7 +84,7 @@ def clean_rewrite(raw: str) -> str:
 
 async def rewrite_question(client: OllamaClient, question: str, history: Sequence[Exchange],
                            turns: int, max_tokens: int) -> Rewrite:
-    if not history or turns <= 0:
+    if not should_rewrite(question, history, turns):
         return Rewrite(question, rewritten=False)
     system, user = build_rewrite_prompt(question, list(history)[-turns:])
     try:

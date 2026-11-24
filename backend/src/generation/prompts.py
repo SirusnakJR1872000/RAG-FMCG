@@ -20,13 +20,14 @@ Rules:
 - If sources disagree, state both and cite both.
 - Be concise: at most 250 words."""
 
-REWRITE_SYSTEM_PROMPT = """You rewrite follow-up questions. Given a short conversation and a new
-question, write ONE standalone question that contains everything needed to understand it
-without the conversation (replace pronouns like "it" or "that" with what they refer to).
-If the new question is already standalone, repeat it unchanged.
-Use only the subject matter of the conversation. Never copy document codes, section numbers,
-version numbers or citation markers such as [1] into the question.
-Output only the standalone question: no quotes, no explanation, at most 40 words."""
+REWRITE_SYSTEM_PROMPT = """You rewrite follow-up questions. You get a short conversation and a
+new question. Output the new question as a standalone question, changing as little as possible:
+- If the new question already makes sense on its own, output it exactly as written.
+- Otherwise replace only the words that depend on the conversation (such as "it", "that",
+  "in that case", "the same") with what they refer to, and keep all the user's other words.
+- Use only the subject matter of the conversation. Never copy document codes, section numbers,
+  version numbers or citation markers such as [1].
+Output only the question: no quotes, no explanation."""
 
 
 @dataclass(frozen=True)

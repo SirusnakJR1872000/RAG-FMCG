@@ -5,7 +5,8 @@ Created ONCE (models and indexes are loaded in __init__), then used for every qu
 the same flow and returns only the final Result.
 
 Flow for one question:
-  [1] rewrite as a standalone question — only if there is history
+  [1] rewrite as a standalone question — only with history, and only if the question
+      depends on it ("...of it?"); a self-contained question is searched as typed
   [3] dense (FAISS) + sparse (BM25) top-20
   [4] RRF fusion
   [5] cross-encoder rerank of the 20 candidates
@@ -27,7 +28,7 @@ from config import Settings
 from src.generation.citation_check import CitationCheck, check_citations
 from src.generation.ollama_client import CallStats, OllamaClient
 from src.generation.prompts import NOT_COVERED, Exchange, PromptSource, build_answer_prompt
-from src.generation.rewriter import rewrite_question
+from src.generation.rewriter import rewrite_question, should_rewrite
 from src.ingestion.manifest import is_fictional_code
 from src.retrieval.bm25_store import BM25Store
 from src.retrieval.embeddings import Embedder
@@ -208,7 +209,7 @@ class RagPipeline:
         lat = {"rewrite": 0, "retrieval": 0, "rerank": 0, "ttft": 0, "generation": 0}
 
         standalone, rewrite_failed = question, False
-        if history:
+        if should_rewrite(question, history, s.history_turns):
             yield Status("rewriting")
             t = time.perf_counter()
             rewrite = await rewrite_question(self.client, question, history, s.history_turns,

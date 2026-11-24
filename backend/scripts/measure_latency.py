@@ -39,9 +39,11 @@ STAGE_LABEL = {"rewrite": "Standalone rewrite (follow-ups only)",
                "retrieval": "Embedding + FAISS + BM25 + RRF", "rerank": "Reranking 20 candidates",
                "ttft": "Time to first token (from request)", "total": "Full answer"}
 # a scripted conversation: each turn only makes sense with the previous one
-CONVERSATION = ["What must happen when an out-of-specification result is obtained?",
-                "How many working days does Acme allow for the first laboratory investigation?",
-                "And when does a CAPA have to be raised after that?"]
+CONVERSATION = [
+    "What must happen when an out-of-specification result is obtained?",
+    "How many working days does Acme allow for the first laboratory investigation of it?",
+    "And when does a CAPA have to be raised after that?",
+]  # turns 2 and 3 refer back ("of it", "after that"), so both really need the rewrite
 WARMUP = "What does the guidance require for out-of-specification results?"
 
 

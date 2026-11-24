@@ -285,3 +285,12 @@ def test_missing_index_gives_an_actionable_error(tmp_path):
     CHUNKS.to_parquet(tmp_path / "chunks.parquet")
     with pytest.raises(IndexNotReady, match="build_index"):
         RagPipeline(cfg)
+
+
+async def test_a_self_contained_question_with_history_is_not_rewritten():
+    pipeline, fake = build(FakeOllama(rewrite="SHOULD NOT BE USED"))
+    events = await collect(pipeline, "What does Annex 11 say about audit trails?", HISTORY)
+    assert events[0] == Status("retrieving")  # no 'rewriting' stage, no wait
+    assert fake.rewrite_calls == [] and len(fake.answer_calls) == 1
+    assert events[-1].result.standalone_question == "What does Annex 11 say about audit trails?"
+    assert events[-1].result.latency_ms["rewrite"] == 0

@@ -1,11 +1,17 @@
 """Follow-up rewrite (PROJECT_SPEC §8.2 step 1, §9.5)."""
 
 import httpx
+import pytest
 
 from config import Settings
 from src.generation.ollama_client import OllamaClient
 from src.generation.prompts import Exchange
-from src.generation.rewriter import clean_rewrite, rewrite_question
+from src.generation.rewriter import (
+    clean_rewrite,
+    needs_context,
+    rewrite_question,
+    should_rewrite,
+)
 from tests.fakes.fake_ollama import FakeOllama
 
 SETTINGS = Settings(_env_file=None, jwt_secret_key="x" * 64)
@@ -79,3 +85,43 @@ def test_label_detection():
     assert not bad("What does ICH-Q7 require for OOS?", "what does ICH-Q7 require for it?")
     assert not bad("What does ICH Q7 say about reprocessing?", "and reprocessing?")
     assert not bad("Who approves a CAPA at Acme?", "who approves it?")
+
+
+@pytest.mark.parametrize("question", [
+    "How long does Acme allow for the first laboratory investigation of it?",
+    "And when does a CAPA have to be raised in that case?",
+    "who approves it?", "What about retesting?", "and then?", "Why?",
+    "Does that apply to contract labs too?", "Is the same true for the SOP?",
+])
+def test_questions_that_depend_on_the_conversation_are_rewritten(question):
+    assert needs_context(question)
+
+
+@pytest.mark.parametrize("question", [
+    "What does Annex 11 say about audit trails?",
+    "How many working days does Acme allow for the first laboratory investigation?",
+    "Who has to approve the retest plan?",
+    "What are the three stages of process validation in the FDA guidance?",
+    "Which records must be kept for a batch after release?",
+])
+def test_self_contained_questions_are_searched_as_typed(question):
+    assert not needs_context(question)
+
+
+def test_a_reference_word_only_counts_as_a_whole_word():
+    assert not needs_context("Which specifications apply to the withdrawal of intermediates?")
+
+
+def test_should_rewrite_needs_history_and_a_dependent_question():
+    assert should_rewrite("who approves it?", HISTORY, 2)
+    assert not should_rewrite("who approves it?", [], 2)  # no history
+    assert not should_rewrite("who approves it?", HISTORY, 0)  # history turned off
+    assert not should_rewrite("What does Annex 11 say about audit trails?", HISTORY, 2)
+
+
+async def test_a_self_contained_question_makes_no_llm_call_even_with_history():
+    fake = FakeOllama()
+    q = "What does Annex 11 say about audit trails?"
+    result = await rewrite_question(client(fake), q, HISTORY, 2, 64)
+    assert (result.question, result.rewritten, result.failed) == (q, False, False)
+    assert fake.requests == []
