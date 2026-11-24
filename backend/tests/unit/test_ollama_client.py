@@ -101,3 +101,15 @@ async def test_unload_sends_keep_alive_zero():
     fake.fail = httpx.ConnectError("down")
     with pytest.raises(LLMUnavailable):
         await make(fake).unload()
+
+
+async def test_another_model_and_extra_options_can_be_requested():
+    fake = FakeOllama()
+    client = OllamaClient(SETTINGS, transport=fake.transport(), model="llama3.2:3b")
+    await client.chat("s", "q", 200, options={"temperature": 0.7})
+    body = fake.requests[0]
+    assert body["model"] == "llama3.2:3b" and body["options"]["temperature"] == 0.7
+    assert body["options"]["num_ctx"] == 4096  # still never left to Ollama's default
+    await make(fake).chat("s", "q", 200)
+    assert fake.requests[1]["model"] == "llama3.1:8b"
+    assert fake.requests[1]["options"]["temperature"] == 0.1
