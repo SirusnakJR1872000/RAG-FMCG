@@ -1,0 +1,201 @@
+{
+  "date": "2026-11-24",
+  "git_commit": "f7cda17",
+  "llm_model": "llama3.1:8b",
+  "num_ctx": 4096,
+  "embedding_model": "intfloat/e5-small-v2",
+  "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "cpus": 12,
+  "n_single": 10,
+  "n_conversation": 3,
+  "stages": {
+    "rewrite": {
+      "n": 2,
+      "p50": 10518,
+      "p90": 13216
+    },
+    "retrieval": {
+      "n": 13,
+      "p50": 110,
+      "p90": 130
+    },
+    "rerank": {
+      "n": 13,
+      "p50": 789,
+      "p90": 840
+    },
+    "ttft": {
+      "n": 13,
+      "p50": 38750,
+      "p90": 48187
+    },
+    "total": {
+      "n": 13,
+      "p50": 51338,
+      "p90": 86570
+    }
+  },
+  "llm": {
+    "tokens_per_second_p50": 5.98,
+    "completion_tokens_p50": 70,
+    "prompt_tokens_p50": 873,
+    "prompt_tokens_max": 1218,
+    "answers": 13,
+    "truncated": 0,
+    "citation_ok": 12,
+    "citation_invalid": 0,
+    "citation_uncited": 0,
+    "retrieval_refusals": 0,
+    "model_refusals": 1
+  },
+  "memory": {
+    "backend_peak_rss_mb": 1005,
+    "ollama_resident_mb": 5318
+  },
+  "mem_before": {
+    "MemTotal": 15657,
+    "MemAvailable": 3512,
+    "SwapTotal": 4095,
+    "SwapFree": 1112,
+    "SwapUsed": 2983
+  },
+  "mem_after": {
+    "MemTotal": 15657,
+    "MemAvailable": 2259,
+    "SwapTotal": 4095,
+    "SwapFree": 841,
+    "SwapUsed": 3254
+  },
+  "questions": [
+    {
+      "question": "What must happen when an out-of-specification test result is obtained for an API?",
+      "answer_type": "answered",
+      "completion_tokens": 77,
+      "rewrite": 0,
+      "retrieval": 110,
+      "rerank": 822,
+      "ttft": 37602,
+      "total": 50473
+    },
+    {
+      "question": "How many working days does Acme allow for a Phase I OOS laboratory investigation?",
+      "answer_type": "answered",
+      "completion_tokens": 38,
+      "rewrite": 0,
+      "retrieval": 110,
+      "rerank": 708,
+      "ttft": 38750,
+      "total": 44988
+    },
+    {
+      "question": "how often do we have to review the quality of our APIs, and what goes into that review?",
+      "answer_type": "answered",
+      "completion_tokens": 275,
+      "rewrite": 0,
+      "retrieval": 97,
+      "rerank": 846,
+      "ttft": 42138,
+      "total": 89629
+    },
+    {
+      "question": "What does ICH Q10 say a CAPA system should be based on?",
+      "answer_type": "answered",
+      "completion_tokens": 44,
+      "rewrite": 0,
+      "retrieval": 93,
+      "rerank": 771,
+      "ttft": 44020,
+      "total": 51338
+    },
+    {
+      "question": "What are the three stages of process validation in the FDA guidance?",
+      "answer_type": "answered",
+      "completion_tokens": 70,
+      "rewrite": 0,
+      "retrieval": 96,
+      "rerank": 834,
+      "ttft": 43206,
+      "total": 54977
+    },
+    {
+      "question": "if a critical deviation happens, how fast do senior people need to hear about it?",
+      "answer_type": "answered",
+      "completion_tokens": 30,
+      "rewrite": 0,
+      "retrieval": 76,
+      "rerank": 789,
+      "ttft": 29058,
+      "total": 33823
+    },
+    {
+      "question": "Does EU GMP Annex 11 require audit trails?",
+      "answer_type": "answered",
+      "completion_tokens": 44,
+      "rewrite": 0,
+      "retrieval": 209,
+      "rerank": 751,
+      "ttft": 27549,
+      "total": 34559
+    },
+    {
+      "question": "What does ICH Q9(R1) say about formality in quality risk management?",
+      "answer_type": "answered",
+      "completion_tokens": 189,
+      "rewrite": 0,
+      "retrieval": 122,
+      "rerank": 814,
+      "ttft": 56285,
+      "total": 89541
+    },
+    {
+      "question": "Does Acme's OOS SOP align with ICH Q7 on investigating out-of-specification results?",
+      "answer_type": "answered",
+      "completion_tokens": 64,
+      "rewrite": 0,
+      "retrieval": 124,
+      "rerank": 789,
+      "ttft": 26100,
+      "total": 36596
+    },
+    {
+      "question": "how long must we keep reserve samples of an API batch?",
+      "answer_type": "answered",
+      "completion_tokens": 80,
+      "rewrite": 0,
+      "retrieval": 23,
+      "rerank": 741,
+      "ttft": 40662,
+      "total": 54253
+    },
+    {
+      "question": "What must happen when an out-of-specification result is obtained?",
+      "answer_type": "answered",
+      "completion_tokens": 135,
+      "rewrite": 0,
+      "retrieval": 113,
+      "rerank": 842,
+      "ttft": 38542,
+      "total": 61339
+    },
+    {
+      "question": "How many working days does Acme allow for the first laboratory investigation?",
+      "answer_type": "model_refusal",
+      "completion_tokens": 5,
+      "rewrite": 13890,
+      "retrieval": 131,
+      "rerank": 761,
+      "ttft": 33593,
+      "total": 34268
+    },
+    {
+      "question": "And when does a CAPA have to be raised after that?",
+      "answer_type": "answered",
+      "completion_tokens": 149,
+      "rewrite": 7145,
+      "retrieval": 98,
+      "rerank": 793,
+      "ttft": 49229,
+      "total": 74687
+    }
+  ]
+}
