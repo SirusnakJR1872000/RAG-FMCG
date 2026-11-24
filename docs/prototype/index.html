@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GMP Assistant Prototype</title>
+<style>
+/* Design tokens: docs/UI_AND_SYSTEM_OVERVIEW.md §9.2 */
+:root {
+  --canvas: #ecf0fa; --surface: #ffffff; --surface-muted: #f8fafc; --border: #e2e8f0;
+  --primary: #2563eb; --primary-hover: #1d4ed8; --primary-subtle: #dbeafe; --primary-ink: #1d4ed8;
+  --text: #0f172a; --muted: #64748b;
+  --success-bg: #f0fdf4; --success: #15803d; --warning-bg: #fffbeb; --warning: #b45309;
+  --danger-bg: #fef2f2; --danger: #b91c1c; --info-bg: #f1f5f9; --info: #334155;
+  --fict-bg: #f5f3ff; --fict: #6d28d9;
+  --radius: 16px; --shadow: 0 1px 2px rgba(15,23,42,.05), 0 4px 16px rgba(15,23,42,.05);
+  --font: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--canvas);
+  background-image: radial-gradient(1200px 500px at 100% -10%, #dbe7ff 0%, transparent 60%);
+  font-size: 15px; line-height: 1.5; min-height: 100vh; }
+a { color: var(--primary); text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; border-radius: 8px; }
+.hidden { display: none !important; }
+
+/* ── top bar ── */
+.topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 24px;
+  padding: 12px 24px; background: rgba(255,255,255,.85); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); }
+.logo { width: 38px; height: 38px; border-radius: 12px; background: var(--primary-subtle);
+  display: grid; place-items: center; color: var(--primary); }
+.brand b { display: block; font-size: 16px; }
+.brand small { color: var(--muted); font-size: 12px; }
+.nav { display: flex; gap: 6px; flex: 1; }
+.nav a, .nav span { padding: 7px 14px; border-radius: 999px; color: var(--info); font-weight: 500;
+  font-size: 14px; }
+.nav a:hover { background: var(--surface-muted); }
+.nav a.active { background: var(--primary); color: #fff; }
+.nav span { color: #94a3b8; cursor: not-allowed; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border); font-size: 13px; font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+.user { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: #475569; color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.user small { display: block; color: var(--muted); }
+
+/* ── shared ── */
+.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; padding: 11px 20px;
+  font-weight: 600; border: 1px solid transparent; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); }
+.label { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; font-weight: 700;
+  color: var(--muted); }
+.badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 9px;
+  font-size: 12px; font-weight: 600; }
+.badge-fict { background: var(--fict-bg); color: var(--fict); }
+.badge-ok { background: var(--success-bg); color: var(--success); }
+.badge-planned { background: var(--warning-bg); color: var(--warning); }
+.chip { background: var(--primary-subtle); color: var(--primary-ink); border-radius: 6px;
+  padding: 1px 7px; font-size: 12px; font-weight: 700; font-family: var(--mono); }
+.banner { margin: 16px auto 0; max-width: calc(1600px - 48px); width: calc(100% - 48px); padding: 10px 16px; border-radius: 12px; background: var(--info-bg);
+  color: var(--info); font-size: 14px; border: 1px solid var(--border); }
+
+/* ── landing ── */
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+.hero { display: grid; grid-template-columns: 1fr 1.05fr; gap: 48px; align-items: center;
+  padding: 56px 0 40px; }
+.eyebrow { display: inline-flex; gap: 8px; align-items: center; padding: 5px 12px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border); font-size: 13px; font-weight: 600;
+  color: var(--info); }
+.hero h1 { font-size: 46px; line-height: 1.08; margin: 18px 0 16px; letter-spacing: -.02em; }
+.hero h1 em { font-style: normal; color: var(--primary); }
+.hero p { color: var(--info); font-size: 17px; max-width: 520px; }
+.actions { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+.preview { padding: 18px; }
+.preview .q { background: var(--surface-muted); border-radius: 12px; padding: 10px 14px;
+  display: inline-block; font-weight: 500; margin-bottom: 12px; }
+.mini-src { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-top: 8px;
+  font-size: 13px; }
+.mini-src b { font-family: var(--mono); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 8px 0 56px; }
+.stat { padding: 18px 20px; }
+.stat .n { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.stat .t { color: var(--muted); font-size: 13px; }
+section.block { margin-bottom: 64px; }
+section.block h2 { font-size: 32px; margin: 6px 0 6px; letter-spacing: -.01em; }
+section.block > p { color: var(--muted); margin: 0 0 24px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.feature { padding: 20px; }
+.feature h3 { margin: 12px 0 6px; font-size: 17px; }
+.feature p { margin: 0; color: var(--muted); font-size: 14px; }
+.ficon { width: 40px; height: 40px; border-radius: 12px; background: var(--primary-subtle);
+  color: var(--primary); display: grid; place-items: center; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; counter-reset: s; }
+.step { padding: 20px; position: relative; }
+.step h3 { margin: 10px 0 6px; font-size: 16px; }
+.step p { margin: 0; color: var(--muted); font-size: 14px; }
+.step .num { font-weight: 800; color: var(--primary); font-size: 13px; }
+.doclist { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.doclist .card { padding: 6px 0; }
+.docrow { display: flex; justify-content: space-between; gap: 12px; padding: 10px 18px;
+  border-top: 1px solid var(--border); font-size: 14px; }
+.docrow:first-of-type { border-top: 0; }
+.docrow code { font-family: var(--mono); font-weight: 700; font-size: 13px; }
+.docrow span { color: var(--muted); text-align: right; }
+.cta { padding: 36px; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  background: linear-gradient(120deg, #1d4ed8, #3b82f6); color: #fff; border: 0; }
+.cta h2 { margin: 0 0 6px; font-size: 28px; }
+.cta p { margin: 0; opacity: .9; }
+.cta .btn-ghost { border: 0; }
+footer { color: var(--muted); font-size: 13px; padding: 24px 0 40px; text-align: center; }
+
+/* ── chat ── */
+.chat { display: grid; grid-template-columns: 250px 1fr 380px; gap: 16px; padding: 16px 24px 24px;
+  max-width: 1600px; margin: 0 auto;
+  height: calc(100vh - 63px); }
+.col { min-height: 0; display: flex; flex-direction: column; }
+.convs { padding: 18px 14px; }
+.convs h3 { margin: 0 0 12px; font-size: 16px; }
+.convs .btn { width: 100%; justify-content: center; margin-bottom: 18px; }
+.conv { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 9px 10px;
+  border-radius: 10px; font-size: 13.5px; color: var(--text); }
+.conv:hover { background: var(--surface-muted); }
+.conv.active { background: var(--primary-subtle); color: var(--primary-ink); font-weight: 600; }
+.convs .note { margin-top: auto; font-size: 12px; color: var(--muted); padding: 10px;
+  background: var(--surface-muted); border-radius: 10px; }
+.main { padding: 22px 26px 18px; }
+.main header h2 { margin: 2px 0 2px; font-size: 22px; }
+.main header p { margin: 0; color: var(--muted); font-size: 14px; }
+.thread { flex: 1; overflow-y: auto; padding: 18px 2px; min-height: 0; }
+.msg { display: flex; gap: 12px; margin-bottom: 18px; }
+.msg .who { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 12px; background: var(--surface-muted); border: 1px solid var(--border); }
+.msg .who.bot { background: var(--primary); color: #fff; border: 0; }
+.bubble { background: var(--surface-muted); border-radius: 14px; padding: 10px 14px; }
+.answer { border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; flex: 1; }
+.status { color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.spin { width: 14px; height: 14px; border: 2px solid var(--primary-subtle); border-top-color: var(--primary);
+  border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pending { background: var(--info-bg); color: var(--info); border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; margin-bottom: 10px; }
+.evidence { margin: 6px 0 0; padding: 0; list-style: none; }
+.evidence li { padding: 6px 0; font-size: 14px; }
+.cite { border: 0; background: var(--primary-subtle); color: var(--primary-ink); font-weight: 700;
+  border-radius: 6px; padding: 0 7px; font-size: 12px; margin-right: 6px; }
+.verify { margin-top: 12px; padding: 9px 12px; border-radius: 10px; background: var(--success-bg);
+  color: var(--success); font-size: 14px; font-weight: 500; }
+.foot { display: flex; gap: 16px; align-items: center; margin-top: 10px; font-size: 13px;
+  color: var(--muted); flex-wrap: wrap; }
+.mode { font-size: 12px; }
+.composer { border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; background: #fff; }
+.composer textarea { width: 100%; border: 0; resize: none; font: inherit; outline: none; min-height: 44px; }
+.composer .row { display: flex; justify-content: space-between; align-items: center; }
+.composer small { color: var(--muted); }
+.disclaimer { color: var(--muted); font-size: 12px; margin-top: 8px; }
+.empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+.chips button { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 7px 14px;
+  font-size: 13px; }
+.chips button:hover { border-color: var(--primary); color: var(--primary); }
+.sources { padding: 18px 16px; }
+.sources h3 { margin: 0; font-size: 17px; }
+.sources > p { margin: 2px 0 12px; color: var(--muted); font-size: 12.5px; }
+.srclist { overflow-y: auto; flex: 1; min-height: 0; padding-right: 2px; }
+.src { border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px;
+  transition: box-shadow .2s, border-color .2s; }
+.src.hl { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-subtle); }
+.src .top { display: flex; gap: 10px; align-items: flex-start; }
+.src .num { width: 26px; height: 26px; flex: none; border-radius: 8px; background: var(--surface-muted);
+  border: 1px solid var(--border); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.src .code { font-family: var(--mono); font-weight: 700; font-size: 13.5px; }
+.src .title { color: var(--muted); font-size: 12.5px; }
+.src .meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 8px 0;
+  font-size: 12.5px; color: var(--info); }
+.src blockquote { margin: 0; background: var(--surface-muted); border-radius: 10px; padding: 9px 11px;
+  font-size: 13px; color: var(--info); max-height: 7.6em; overflow: hidden; white-space: pre-line; }
+.src.open blockquote { max-height: none; }
+.src .more { border: 0; background: none; color: var(--primary); font-size: 12.5px; padding: 6px 0 0;
+  font-weight: 600; }
+
+@media (max-width: 1100px) {
+  .chat { grid-template-columns: 1fr; height: auto; }
+  .convs { display: none; }
+  .hero { grid-template-columns: 1fr; }
+  .stats, .grid3, .steps { grid-template-columns: 1fr 1fr; }
+  .doclist { grid-template-columns: 1fr; }
+  .nav span { display: none; }
+}
+@media (max-width: 640px) {
+  .topbar { flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
+  .user small, .user div:last-child { display: none; }
+  .wrap { padding: 0 16px; }
+  .hero h1 { font-size: 34px; }
+  .stats, .grid3, .steps { grid-template-columns: 1fr; }
+  .cta { flex-direction: column; align-items: flex-start; }
+  .chat { padding: 12px 16px; }
+}
+[id] { scroll-margin-top: 84px; }
+/* ───────── landing — follows docs/images/mockup_0_landing_style_only.png ───────── */
+body.landing { background: #f3f6fd; background-image:
+  radial-gradient(900px 520px at 72% -8%, #d6e4ff 0%, transparent 62%),
+  radial-gradient(700px 600px at -10% 30%, #e3ecff 0%, transparent 60%),
+  radial-gradient(800px 500px at 100% 55%, #e6eeff 0%, transparent 60%); }
+:root { --maxw: 1400px; --gutter: clamp(16px, 3.2vw, 44px); }
+.site { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); }
+.sitebar { position: sticky; top: 0; z-index: 20; background: rgba(243,246,253,.82); backdrop-filter: blur(12px); }
+.sitebar .site { display: flex; align-items: center; gap: 28px; height: 74px; }
+.sitebar .logo { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(145deg,#e0ebff,#c7dbff);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 10px rgba(37,99,235,.15); }
+.sitenav { display: flex; gap: 34px; flex: 1; justify-content: center; }
+.sitenav a { color: var(--text); font-size: 14.5px; font-weight: 500; }
+.sitenav a:hover { color: var(--primary); }
+.btn-pill { border-radius: 999px; padding: 10px 22px; font-size: 14.5px; }
+.btn-shadow { box-shadow: 0 6px 16px rgba(37,99,235,.28); }
+.btn-ghost.soft { border-color: #e2e8f0; box-shadow: 0 2px 8px rgba(15,23,42,.06); }
+
+.hero3 { position: relative; overflow: hidden; padding-bottom: 8px; }
+.hero-photo { position: absolute; left: max(0px, calc((100vw - var(--maxw)) / 2 - 90px)); bottom: 0;
+  width: min(42vw, 560px); height: clamp(170px, 16vw, 240px); object-fit: cover;
+  object-position: left center; -webkit-mask-image: linear-gradient(90deg,#000 55%,transparent 100%), linear-gradient(0deg,#000 75%,transparent 100%);
+  -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg,#000 55%,transparent 100%), linear-gradient(0deg,#000 75%,transparent 100%);
+  mask-composite: intersect; }
+.hero2 { display: grid; grid-template-columns: 35% 1fr; gap: clamp(20px, 2.6vw, 36px); align-items: start;
+  max-width: var(--maxw); margin: 0 auto; padding: 26px var(--gutter) 0;
+  position: relative; }
+.hero2 .eyebrow { margin-top: 18px; background: rgba(255,255,255,.75); border-color: #dbe5f7; color: var(--text); }
+.hero2 .eyebrow svg { color: var(--primary); }
+.hero2 h1 { font-size: clamp(30px, 2.95vw, 44px); line-height: 1.08; margin: 26px 0 18px; letter-spacing: -.025em; }
+.hero2 h1 em { font-style: normal; color: var(--primary); }
+.hero2 .lead { color: #334155; font-size: clamp(15px, 1.15vw, 17px); margin: 0; }
+.hero2 .actions { margin-top: 26px; }
+.hero-spacer { height: clamp(150px, 14vw, 210px); }
+
+/* product window */
+.appwin { border-radius: 20px; overflow: hidden; background: rgba(255,255,255,.92); font-size: 11.5px;
+  border: 1px solid #dfe7f6; box-shadow: 0 40px 80px -30px rgba(30,64,175,.35), 0 10px 30px rgba(15,23,42,.08); }
+.winbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid #edf1f8; }
+.lights { display: flex; gap: 6px; } .lights i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.winbar .brand { flex: none; white-space: nowrap; } .winbar .brand b { font-size: 12.5px; }
+.winbar .brand small { display: none; } .winbar > * { flex-shrink: 0; } .winbar .winnav { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.winbar .logo { width: 30px; height: 30px; border-radius: 9px; }
+.winnav { display: flex; gap: 2px; flex: 1; margin-left: 14px; }
+.winnav span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; padding: 5px 11px; border-radius: 999px; color: #334155; font-weight: 500; font-size: 11px; }
+.winnav span.on { background: var(--primary); color: #fff; }
+.winbar .bell { position: relative; color: #475569; } .winbar .bell i { position: absolute; top: -1px; right: -1px; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; }
+.winbody { display: grid; grid-template-columns: 24% 1fr 28%; }
+.wcol { padding: 14px 12px; border-right: 1px solid #edf1f8; min-width: 0; }
+.wcol:last-child { border-right: 0; }
+.whead { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 11.5px; }
+.wplus { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font-size: 12px; color: var(--muted); }
+.wnew { background: var(--primary); color: #fff; border-radius: 8px; text-align: center; padding: 6px; margin: 10px 0 12px; font-weight: 600; }
+.wgroup { font-size: 10px; font-weight: 600; color: var(--muted); margin: 10px 0 4px 4px; }
+.wconv { display: flex; gap: 6px; align-items: center; padding: 6px 7px; border-radius: 8px; color: #334155; font-size: 10.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wconv svg { flex: none; color: #64748b; }
+.wconv.on { background: var(--primary-subtle); color: var(--primary-ink); font-weight: 600; } .wconv.on svg { color: var(--primary); }
+.wtitle { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 2px 0 2px; }
+.wtitle b { font-size: 15px; }
+.wsession { display: inline-flex; gap: 4px; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.wsub { color: var(--muted); font-size: 10.5px; border-bottom: 1px solid #edf1f8; padding-bottom: 10px; }
+.wmsg { display: flex; gap: 8px; margin-top: 12px; }
+.wav { width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 9px; font-weight: 700;
+  background: #f1f5f9; border: 1px solid var(--border); }
+.wav.bot { background: var(--primary); color: #fff; border: 0; }
+.wmsg .meta { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--muted); }
+.wmsg .meta b { color: var(--text); font-size: 11px; margin-right: 6px; }
+.wq { background: #f1f5f9; border-radius: 10px; padding: 7px 10px; display: inline-block; font-weight: 500; margin-top: 4px; }
+.wans { border: 1px solid #e8edf6; border-radius: 10px; padding: 9px 10px; margin-top: 5px; line-height: 1.5; color: #1e293b; }
+.wans p { margin: 0 0 6px; }
+.wcite { background: var(--primary-subtle); color: var(--primary-ink); border-radius: 4px; padding: 0 4px; font-size: 9.5px; font-weight: 700; }
+.wverify { background: var(--success-bg); color: var(--success); border-radius: 8px; padding: 6px 8px; margin-top: 6px; font-weight: 500; }
+.wfoot { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 10px; margin-top: 7px; }
+.wfoot span:last-child { margin-left: auto; }
+.wcompose { margin-top: 12px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; color: #94a3b8; }
+.wcompose .row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.wcompose .send { background: var(--primary); color: #fff; border-radius: 7px; padding: 4px 11px; font-weight: 600; }
+.wsrc { border: 1px solid #e8edf6; border-radius: 10px; padding: 8px 9px; margin-top: 8px; background: #fff; }
+.wsrc .t { display: flex; gap: 7px; align-items: flex-start; }
+.wsrc .n { width: 20px; height: 20px; flex: none; border-radius: 6px; border: 1px solid var(--border); display: grid; place-items: center; font-weight: 700; font-size: 10px; }
+.wsrc b { font-size: 11px; }
+.wsrc .tt { color: var(--muted); font-size: 9.5px; line-height: 1.3; }
+.wsrc .dots { margin-left: auto; color: #94a3b8; letter-spacing: 1px; }
+.wmeta { color: #475569; font-size: 9.8px; margin-top: 5px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.wmeta .chip { font-size: 9.5px; }
+.wsmall { color: var(--muted); font-size: 9.5px; margin-top: 2px; }
+
+/* strip, sections */
+.fstrip { display: grid; grid-template-columns: repeat(4, 1fr); padding: 26px 10px;
+  width: calc(100% - 2 * var(--gutter)); max-width: calc(var(--maxw) - 2 * var(--gutter)); margin: -6px auto 76px; position: relative; z-index: 2;
+  background: rgba(255,255,255,.88); border-color: #e3eaf7; border-radius: 20px; }
+.fstrip > div { display: flex; gap: 16px; padding: 0 24px; border-left: 1px solid #e5ebf5; align-items: flex-start; }
+.fstrip > div:first-child { border-left: 0; }
+.fstrip .bigicon { color: var(--primary); flex: none; }
+.fstrip h4 { margin: 0 0 4px; font-size: 15.5px; }
+.fstrip p { margin: 0; color: #64748b; font-size: 13px; }
+.sec { position: relative; margin: 0 0 80px; }
+.sec.site { margin: 0 auto 80px; }
+.sec h2 { font-size: clamp(28px, 2.8vw, 40px); letter-spacing: -.02em; margin: 8px 0 8px; line-height: 1.12; }
+.sec .sub { color: #475569; margin: 0 0 28px; font-size: 16px; }
+.label { letter-spacing: .1em; }
+.features-wrap { position: relative; }
+.feature-photo { position: absolute; right: max(0px, calc((100vw - var(--maxw)) / 2 - 175px)); top: 70px;
+  width: 170px; height: 450px; object-fit: cover; object-position: left;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 35%); mask-image: linear-gradient(90deg, transparent 0%, #000 35%); }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.fcard { padding: 22px 22px 24px; background: rgba(255,255,255,.8); border-color: #e3eaf7; border-radius: 18px; }
+.fcard > svg { color: var(--primary); }
+.fcard h3 { margin: 16px 0 6px; font-size: 17.5px; }
+.fcard p { margin: 0; color: #475569; font-size: 14px; }
+.tag { display: inline-block; white-space: nowrap; margin-left: 6px; vertical-align: middle; font-size: 10px; font-weight: 600;
+  border-radius: 999px; padding: 1px 7px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.split { display: grid; grid-template-columns: 28% 1fr; gap: 40px; align-items: start; }
+.split h2 { font-size: clamp(28px, 2.8vw, 40px); }
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 14px; align-items: center; }
+.flow .arrow { color: #64748b; }
+.fstep { padding: 22px 18px 24px; text-align: center; height: 100%; background: rgba(255,255,255,.85); border-color: #e3eaf7; border-radius: 18px; }
+.tile { width: 54px; height: 54px; margin: 0 auto; border-radius: 16px; background: #fff; color: var(--primary); display: grid; place-items: center;
+  box-shadow: 0 8px 18px rgba(37,99,235,.14), inset 0 0 0 1px #e6edfa; }
+.fstep h3 { margin: 16px 0 6px; font-size: 16.5px; }
+.fstep p { margin: 0; color: #475569; font-size: 14px; }
+.ucards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.ucard { overflow: hidden; background: rgba(255,255,255,.9); border-color: #e3eaf7; border-radius: 18px; }
+.ucard .pic { position: relative; height: 190px; }
+.ucard .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ucard .badge-ic { position: absolute; left: 16px; bottom: -22px; width: 46px; height: 46px; border-radius: 50%; background: #fff;
+  color: var(--primary); display: grid; place-items: center; box-shadow: 0 6px 16px rgba(15,23,42,.12); }
+.ucard .body { padding: 32px 20px 22px; }
+.ucard h3 { margin: 0 0 6px; font-size: 18px; }
+.ucard p { margin: 0; color: #475569; font-size: 14px; }
+.cta2 { position: relative; overflow: hidden; border-radius: 26px; padding: 44px 52px; color: #fff; min-height: 190px;
+  background: linear-gradient(100deg, #3b6ff5 0%, #5b8cf7 45%, #9bbcf8 75%, #c9dafb 100%);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto 24%; align-items: center; gap: 28px; box-shadow: 0 24px 50px -24px rgba(37,99,235,.55); }
+.cta2 h2 { margin: 0 0 12px; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.15; }
+.cta2 p { margin: 0; opacity: .95; max-width: 460px; }
+.cta2 .btns { display: flex; gap: 14px; position: relative; z-index: 1; }
+.cta2 .btn-ghost { border: 0; }
+.cta2 .btn-primary { background: #1d4ed8; }
+.cta-photo { position: absolute; right: 0; top: 0; height: 100%; width: 42%; object-fit: cover;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 40%); mask-image: linear-gradient(90deg, transparent 0%, #000 40%); }
+.corpus2 { padding: 20px 22px; display: flex; flex-wrap: wrap; gap: 8px; background: rgba(255,255,255,.85); }
+.dchip { display: inline-flex; gap: 8px; align-items: center; border: 1px solid #e3eaf7; border-radius: 999px; padding: 5px 12px; font-size: 13px; background: #fff; }
+.dchip code { font-family: var(--mono); font-weight: 700; font-size: 12.5px; } .dchip span { color: var(--muted); font-size: 12px; }
+.corpus2 .card { padding: 6px 0; background: rgba(255,255,255,.85); }
+.sitefoot { color: var(--muted); font-size: 13px; padding: 28px 0 40px; display: flex; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; border-top: 1px solid #d7deee; margin-top: 56px; }
+@media (max-width: 1620px) { .feature-photo { display: none; } }
+@media (max-width: 1300px) { .sitenav { gap: 20px; } .winnav span:nth-child(n+4) { display: none; } }
+@media (max-width: 1100px) {
+  .sitenav { display: none; }
+  .hero2, .split { grid-template-columns: 1fr; } .hero-photo { display: none; } .hero-spacer { height: 0; }
+  .cta2 { grid-template-columns: 1fr; } .cta-photo { opacity: .35; width: 100%; }
+  .fstrip, .grid4 { grid-template-columns: 1fr 1fr; row-gap: 22px; } .fstrip > div:nth-child(3) { border-left: 0; }
+  .flow { grid-template-columns: 1fr 1fr; } .flow .arrow { display: none; }
+  .ucards, .corpus2 { grid-template-columns: 1fr; }
+  .winbody { grid-template-columns: 1fr 34%; } .winbody .wcol:first-child { display: none; }
+  .fstrip { margin: 24px auto 60px; }
+}
+@media (max-width: 640px) {
+  .fstrip { margin: 20px auto 48px; }
+  .sitebar .btn-ghost { display: none; }
+  .sitebar .site { gap: 12px; } .sitebar .brand small { display: none; }
+  .sitebar .btn-primary { white-space: nowrap; margin-left: auto; padding: 9px 16px; }
+  .hero2 h1 { font-size: 36px; } .sec h2, .split h2 { font-size: 30px; }
+  .fstrip, .grid4, .flow { grid-template-columns: 1fr; } .fstrip > div { border-left: 0; padding: 0 12px; }
+  .winbody { grid-template-columns: 1fr; } .winbody .wcol:last-child { display: none; } .winnav { display: none; }
+  .cta2 { padding: 28px 22px; } .cta2 .btns { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7 15h10"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 13 10 5 10-5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4V5Z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 3 3 10.5l7 3 3 7L21 3Z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7L8 5Z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></symbol>
+  <symbol id="i-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M7 16V9M12 16V5M17 16v-5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM8.5 12l2 2 4-4M8.5 17h7"/></symbol>
+  <linearGradient id="g-glass" x1="0" x2="1"><stop offset="0" stop-color="#dbe6fb"/><stop offset=".45" stop-color="#ffffff"/><stop offset="1" stop-color="#c7d6f5"/></linearGradient>
+  <linearGradient id="g-cap" x1="0" x2="1"><stop offset="0" stop-color="#1d4ed8"/><stop offset=".5" stop-color="#60a5fa"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
+  <linearGradient id="g-liquid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset="1" stop-color="#93c5fd"/></linearGradient>
+  <linearGradient id="g-metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f5f9"/><stop offset="1" stop-color="#94a3b8"/></linearGradient>
+  <symbol id="art-vial" viewBox="0 0 40 100">
+    <rect x="6" y="2" width="28" height="18" rx="4" fill="url(#g-cap)"/>
+    <rect x="9" y="19" width="22" height="7" fill="#cbd5e1"/>
+    <rect x="3" y="25" width="34" height="73" rx="7" fill="url(#g-glass)" stroke="#b6c7ea"/>
+    <rect x="5" y="60" width="30" height="36" rx="5" fill="url(#g-liquid)" opacity=".75"/>
+    <rect x="9" y="30" width="4" height="60" rx="2" fill="#fff" opacity=".8"/>
+  </symbol>
+  <symbol id="art-capsule" viewBox="0 0 100 40">
+    <rect x="1" y="1" width="98" height="38" rx="19" fill="#fff" stroke="#c7d6f5"/>
+    <path d="M50 1h29a19 19 0 0 1 0 38H50Z" fill="url(#g-cap)"/>
+    <rect x="12" y="8" width="30" height="5" rx="2.5" fill="#fff" opacity=".9"/>
+  </symbol>
+  <symbol id="art-line" viewBox="0 0 420 190">
+    <rect x="0" y="150" width="420" height="16" rx="8" fill="url(#g-metal)"/>
+    <rect x="0" y="166" width="420" height="8" fill="#cbd5e1"/>
+    <g fill="#94a3b8"><circle cx="40" cy="170" r="3"/><circle cx="140" cy="170" r="3"/><circle cx="240" cy="170" r="3"/><circle cx="340" cy="170" r="3"/></g>
+    <use href="#art-vial" x="20" y="70" width="40" height="82"/><use href="#art-vial" x="72" y="70" width="40" height="82"/>
+    <use href="#art-vial" x="124" y="70" width="40" height="82"/><use href="#art-vial" x="176" y="70" width="40" height="82"/>
+    <use href="#art-vial" x="228" y="70" width="40" height="82"/><use href="#art-vial" x="280" y="70" width="40" height="82"/>
+    <use href="#art-vial" x="332" y="70" width="40" height="82"/>
+    <rect x="300" y="10" width="14" height="120" rx="5" fill="url(#g-metal)"/><rect x="286" y="118" width="42" height="14" rx="4" fill="#64748b"/>
+  </symbol>
+</svg>
+
+<header class="topbar" id="app-header">
+  <a class="brand" href="#/">
+    <span class="logo"><svg width="20" height="20"><use href="#i-flask"/></svg></span>
+    <span><b>GMP Assistant</b><small>Quality Knowledge System</small></span>
+  </a>
+  <nav class="nav" aria-label="Main">
+    <a href="#/" data-route="landing">Overview</a>
+    <a href="#/chat" data-route="chat">Chat</a>
+    <span title="Built in milestone M8">History</span>
+    <span title="Built in milestone M8">Documents</span>
+  </nav>
+  <span class="pill" title="Retrieval engine loaded"><span class="dot"></span>Ready</span>
+  <div class="user"><span class="avatar">GP</span><div><b>Gaurav Patil</b><small>QA user</small></div></div>
+</header>
+<header class="sitebar" id="site-header">
+  <div class="site">
+    <a class="brand" href="#/">
+      <span class="logo"><svg width="20" height="20"><use href="#i-flask"/></svg></span>
+      <span><b>GMP Assistant</b><small>Quality Knowledge System</small></span>
+    </a>
+    <nav class="sitenav" aria-label="Sections">
+      <a href="#features">Features</a><a href="#how">How it Works</a><a href="#use-cases">Use Cases</a>
+      <a href="#compliance">Compliance</a><a href="#security">Security</a><a href="#resources">Resources</a>
+    </nav>
+    <a class="btn btn-ghost btn-pill soft" href="#/chat">Request Demo</a>
+    <a class="btn btn-primary btn-pill btn-shadow" href="#/chat">Get Started</a>
+  </div>
+</header>
+
+<div class="banner" role="note" id="app-banner">
+  <b>Prototype.</b> Retrieval is real (milestones M1–M4: 19 documents, hybrid search + reranker).
+  Answer generation (M5), login and the audit trail (M7) are not built yet.
+</div>
+
+<!-- ───────────── LANDING ───────────── -->
+<main id="landing">
+  <section class="hero3">
+    <img class="hero-photo" src="img/hero-line.jpg" alt="">
+    <div class="hero2">
+      <div>
+        <span class="eyebrow"><svg width="16" height="16"><use href="#i-shield"/></svg>Pharma · GMP · SOP · Compliance</span>
+        <h1>Your <em>GMP &amp; SOP</em><br>Knowledge Assistant</h1>
+        <p class="lead">A secure, on-premise AI assistant for pharma QA and compliance teams. Get accurate, cited
+          answers from GMP regulations and your internal SOPs — with full traceability and an audit-ready record.</p>
+        <div class="actions">
+          <a class="btn btn-primary btn-shadow" href="#/chat"><svg width="14" height="14"><use href="#i-play"/></svg>See in Action</a>
+          <a class="btn btn-ghost soft" href="#/chat">Get Started</a>
+        </div>
+        <div class="hero-spacer"></div>
+      </div>
+      <div class="appwin" id="appwin" aria-label="Product preview"></div>
+    </div>
+  </section>
+
+  <div class="card fstrip" id="security">
+    <div><svg class="bigicon" width="34" height="34"><use href="#i-target"/></svg>
+      <div><h4>Accurate &amp; Cited Answers</h4><p>GMP and SOP-aligned responses with exact document, version and section.</p></div></div>
+    <div><svg class="bigicon" width="34" height="34"><use href="#i-layers"/></svg>
+      <div><h4>Complete Traceability <span class="tag">M7</span></h4><p>Every action is recorded with an audit trail and hash chain.</p></div></div>
+    <div><svg class="bigicon" width="34" height="34"><use href="#i-users"/></svg>
+      <div><h4>Role-Based Access <span class="tag">M7</span></h4><p>Built for QA users, auditors and administrators.</p></div></div>
+    <div><svg class="bigicon" width="34" height="34"><use href="#i-shield"/></svg>
+      <div><h4>On-Premise &amp; Secure</h4><p>Runs entirely on your infrastructure with full data control.</p></div></div>
+  </div>
+
+  <div class="features-wrap">
+    <img class="feature-photo" src="img/feature-vial.jpg" alt="">
+    <section class="sec site" id="features">
+      <span class="label">Features</span>
+      <h2>Everything Your QA &amp; Compliance Teams Need</h2>
+      <p class="sub">A purpose-built AI assistant to make GMP, SOP and quality knowledge accessible, accurate and audit-ready.</p>
+      <div class="grid4">
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-chat"/></svg>
+          <h3>Conversational Q&amp;A</h3><p>Ask natural language questions on GMP, SOPs, and guidelines.</p></div>
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-doc"/></svg>
+          <h3>Source-Linked Answers</h3><p>View exact documents, version and section for every answer.</p></div>
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-zap"/></svg>
+          <h3>Audit Trail <span class="tag">M7</span></h3><p>Complete, tamper-evident history of queries, responses and sources.</p></div>
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-layers"/></svg>
+          <h3>Document Management</h3><p>Ingest, index and manage GMP guidelines, SOPs, and controlled documents.</p></div>
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-users"/></svg>
+          <h3>Role &amp; Access Control <span class="tag">M7</span></h3><p>Viewer, QA, Auditor and Admin roles with fine-grained permissions.</p></div>
+        <div class="card fcard" id="compliance"><svg width="28" height="28"><use href="#i-shield"/></svg>
+          <h3>Compliance Ready</h3><p>Designed to support ICH, WHO, EU GMP and 21 CFR Part 11 expectations.</p></div>
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-bars"/></svg>
+          <h3>Secure &amp; On-Premise</h3><p>Keep your regulated data within your enterprise infrastructure.</p></div>
+        <div class="card fcard"><svg width="28" height="28"><use href="#i-spark"/></svg>
+          <h3>FMCG / GMA Ready <span class="tag">Roadmap</span></h3><p>Configurable for consumer healthcare, FMCG and GMA quality environments.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="site">
+    <section class="sec split" id="how">
+      <div>
+        <span class="label">How it works</span>
+        <h2>From Your SOPs to Trusted Answers</h2>
+        <p class="sub">A simple, secure flow to turn your quality knowledge into an intelligent assistant.</p>
+        <a class="btn btn-primary btn-pill btn-shadow" href="#/chat">Request Demo</a>
+      </div>
+      <div class="flow">
+        <div class="card fstep"><span class="tile"><svg width="26" height="26"><use href="#i-doc"/></svg></span>
+          <h3>1. Ingest</h3><p>Upload GMP guidelines, SOPs, and quality documents.</p></div>
+        <svg class="arrow" width="22" height="22"><use href="#i-arrow"/></svg>
+        <div class="card fstep"><span class="tile"><svg width="26" height="26"><use href="#i-layers"/></svg></span>
+          <h3>2. Process</h3><p>Intelligently index and structure your knowledge.</p></div>
+        <svg class="arrow" width="22" height="22"><use href="#i-arrow"/></svg>
+        <div class="card fstep"><span class="tile"><svg width="26" height="26"><use href="#i-chat"/></svg></span>
+          <h3>3. Ask</h3><p>Get accurate, contextual answers in natural language.</p></div>
+        <svg class="arrow" width="22" height="22"><use href="#i-arrow"/></svg>
+        <div class="card fstep"><span class="tile"><svg width="26" height="26"><use href="#i-shield"/></svg></span>
+          <h3>4. Verify &amp; Trace</h3><p>Review cited sources and audit the complete conversation.</p></div>
+      </div>
+    </section>
+
+    <section class="sec split" id="use-cases">
+      <div>
+        <span class="label">Use cases</span>
+        <h2>Designed for Real-World Quality &amp; Compliance Needs</h2>
+        <p class="sub">Support critical quality workflows across pharma, FMCG and GMA organizations.</p>
+      </div>
+      <div class="ucards">
+        <div class="card ucard"><div class="pic"><img src="img/uc-lab.jpg" alt="Scientist in a lab inspecting a vial">
+          <span class="badge-ic"><svg width="22" height="22"><use href="#i-flask"/></svg></span></div>
+          <div class="body"><h3>Deviation &amp; OOS Handling</h3><p>Get guidance from GMP and SOPs for investigations and CAPA.</p></div></div>
+        <div class="card ucard"><div class="pic"><img src="img/uc-clipboard.jpg" alt="Checklist on a clipboard">
+          <span class="badge-ic"><svg width="22" height="22"><use href="#i-layers"/></svg></span></div>
+          <div class="body"><h3>SOP &amp; Process Guidance</h3><p>Quickly access approved procedures and latest revisions.</p></div></div>
+        <div class="card ucard"><div class="pic"><img src="img/uc-vials.jpg" alt="Vials on a production line">
+          <span class="badge-ic"><svg width="22" height="22"><use href="#i-shield"/></svg></span></div>
+          <div class="body"><h3>Quality Reviews &amp; Audits</h3><p>Prepare for internal and external audits with cited, compliant answers.</p></div></div>
+      </div>
+    </section>
+
+    <section class="sec" id="resources">
+      <span class="label">Resources</span>
+      <h2>What the Assistant Knows</h2>
+      <p class="sub" id="corpus-sub"></p>
+      <div class="card corpus2" id="docs-all"></div>
+    </section>
+
+    <section class="cta2">
+      <div><h2>Ready to modernize your<br>GMP &amp; SOP knowledge access?</h2>
+        <p>Empower your QA and compliance teams with a secure, traceable and regulation-aligned AI assistant.</p></div>
+      <div class="btns"><a class="btn btn-ghost btn-pill" href="#/chat">Request Demo</a>
+        <a class="btn btn-primary btn-pill" href="#/chat">Get Started <svg width="16" height="16"><use href="#i-arrow"/></svg></a></div>
+      <img class="cta-photo" src="img/cta-vials.jpg" alt="">
+    </section>
+    <footer class="sitefoot" id="footer"></footer>
+  </div>
+</main>
+
+<!-- ───────────── CHAT ───────────── -->
+<main id="chat" class="chat hidden">
+  <aside class="card col convs" aria-label="Conversations">
+    <h3>Conversations</h3>
+    <button class="btn btn-primary" id="new-chat">+ New chat</button>
+    <span class="label" style="margin:0 0 6px 10px">Examples</span>
+    <div id="conv-list"></div>
+    <div class="note">Conversations are retained for auditability (M7).</div>
+  </aside>
+
+  <section class="card col main">
+    <header>
+      <span class="label">GMP knowledge assistant</span>
+      <h2 id="chat-title">New chat</h2>
+      <p>Ask questions across approved guidance and internal SOPs.</p>
+    </header>
+    <div class="thread" id="thread" aria-live="polite"></div>
+    <form class="composer" id="composer">
+      <textarea id="q" maxlength="1000" placeholder="Ask a question about GMP or your SOPs…" aria-label="Question"></textarea>
+      <div class="row"><small id="count">0/1000</small>
+        <button class="btn btn-primary" type="submit"><svg width="16" height="16"><use href="#i-send"/></svg>Send</button></div>
+    </form>
+    <div class="disclaimer">Responses use approved documents only. Do not use as a substitute for quality review.</div>
+  </section>
+
+  <aside class="card col sources" aria-label="Sources">
+    <h3 id="src-head">Sources</h3>
+    <p>Only these passages would be used to write the answer.</p>
+    <div class="srclist" id="srclist"><div class="empty">Sources appear here after you ask.</div></div>
+  </aside>
+</main>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+const D = window.PROTO_DATA;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pages = (s) => s.page_start == null ? "" :
+  (s.page_start === s.page_end ? `p. ${s.page_start}` : `pp. ${s.page_start}–${s.page_end}`);
+const short = (m) => m.split("/").pop();
+
+/* ── BM25 over the real chunks (same tokenizer + rank_bm25 defaults as the backend) ── */
+const BM25 = (() => {
+  const tok = (t) => (t.toLowerCase().match(/[a-z0-9]+/g) || []).filter((w) => w.length >= 2 || /^\d+$/.test(w));
+  const docs = D.chunks.map((c) => tok(c.embed_text));
+  const N = docs.length, avgdl = docs.reduce((a, d) => a + d.length, 0) / N;
+  const tf = docs.map((d) => { const m = new Map(); d.forEach((w) => m.set(w, (m.get(w) || 0) + 1)); return m; });
+  const df = new Map(); tf.forEach((m) => m.forEach((_, w) => df.set(w, (df.get(w) || 0) + 1)));
+  const idf = new Map(); let sum = 0; const neg = [];
+  df.forEach((n, w) => { const v = Math.log(N - n + 0.5) - Math.log(n + 0.5); idf.set(w, v); sum += v; if (v < 0) neg.push(w); });
+  const eps = 0.25 * (sum / idf.size); neg.forEach((w) => idf.set(w, eps));
+  const k1 = 1.5, b = 0.75;
+  return (q, k) => {
+    const terms = tok(q);
+    return docs.map((d, i) => {
+      let s = 0;
+      for (const w of terms) {
+        const f = tf[i].get(w) || 0;
+        if (f) s += (idf.get(w) || 0) * (f * (k1 + 1)) / (f + k1 * (1 - b + b * d.length / avgdl));
+      }
+      return [i, s];
+    }).filter((x) => x[1] > 0).sort((a, c) => c[1] - a[1]).slice(0, k)
+      .map(([i, s]) => ({ ...D.chunks[i], score: Math.round(s * 100) / 100, excerpt: D.chunks[i].text.slice(0, 700) }));
+  };
+})();
+
+/* ── landing ── */
+const TITLES = { "G-001": "OOS investigation", "G-013": "Account lockout rules", "G-008": "Annex 11 audit trails",
+  "G-011": "Reserve sample retention", "G-016": "CAPA after an OOS", "G-002": "Phase I OOS timeline" };
+function renderLanding() {
+  const s = D.stats, ex = D.examples.find((e) => e.id === "G-001") || D.examples[0];
+  const ic = (id, w = 12) => `<svg width="${w}" height="${w}"><use href="#${id}"/></svg>`;
+  const conv = (id, on) => `<div class="wconv${on ? " on" : ""}">${ic("i-chat", 11)}${esc(TITLES[id] || id)}</div>`;
+  const [s1, s2, s3] = ex.sources;
+  const src = ex.sources.slice(0, 3).map((x) => `<div class="wsrc"><div class="t"><span class="n">${x.n}</span>
+      <div><b>${esc(x.doc_code)}</b><div class="tt">${esc(x.doc_title)}</div></div><span class="dots">•••</span></div>
+      <div class="wmeta"><span class="chip">§ ${esc(x.section)}</span><span>${esc(x.section_title)}</span></div>
+      <div class="wmeta"><span>${ic("i-layers", 10)} Version ${esc(x.version)}</span>${pages(x) ? `<span>${ic("i-doc", 10)} ${pages(x)}</span>` : ""}
+        ${x.fictional ? '<span class="badge badge-fict" style="font-size:9px;padding:1px 6px">Fictional</span>' : ""}</div></div>`).join("");
+  $("#appwin").innerHTML = `
+    <div class="winbar"><span class="lights"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#34d399"></i></span>
+      <span class="brand"><span class="logo"><svg width="16" height="16"><use href="#i-flask"/></svg></span><span><b>GMP Assistant</b><small>Quality Knowledge System</small></span></span>
+      <span class="winnav"><span class="on">${ic("i-chat", 11)}Chat</span><span>${ic("i-target", 11)}History</span><span>${ic("i-doc", 11)}Documents</span><span>${ic("i-shield", 11)}Audit Trail</span><span>${ic("i-users", 11)}Users</span></span>
+      <span class="pill" style="font-size:10.5px;padding:3px 9px;background:var(--success-bg);border-color:#bbf7d0;color:var(--success)"><span class="dot"></span>Ready</span>
+      <span class="bell"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2ZM10 21h4"/></svg><i></i></span>
+      <span class="avatar" style="width:28px;height:28px;font-size:10px">GP</span></div>
+    <div class="winbody">
+      <div class="wcol"><div class="whead">Conversations <span class="wplus">+</span></div>
+        <div class="wnew">+ New chat</div>
+        <div class="wgroup">Today</div>${conv("G-001", true)}${conv("G-016")}
+        <div class="wgroup">Earlier</div>${conv("G-011")}${conv("G-008")}${conv("G-013")}</div>
+      <div class="wcol"><span class="label" style="font-size:8.5px">GMP knowledge assistant</span>
+        <div class="wtitle"><b>${esc(TITLES[ex.id])}</b><span class="wsession">${ic("i-shield", 10)} On-premise session</span></div>
+        <div class="wsub">Ask questions across approved guidance and internal SOPs.</div>
+        <div class="wmsg"><span class="wav">GP</span><div style="flex:1"><div class="meta"><span><b>You</b></span><span>10:18 AM</span></div>
+          <div class="wq">${esc(ex.question)}</div></div></div>
+        <div class="wmsg"><span class="wav bot">${ic("i-flask", 12)}</span><div style="flex:1">
+          <div class="meta"><span><b>GMP Assistant</b><span class="badge badge-planned" style="font-size:9px;padding:1px 6px">Sample answer · LLM in M5</span></span><span>10:19 AM</span></div>
+          <div class="wans">
+            <p>An out-of-specification (OOS) result must be investigated and documented according to a written procedure. The procedure should require analysis of the data, an assessment of whether a significant problem exists, allocation of corrective-action tasks, and conclusions <span class="wcite">1</span></p>
+            <p>Any resampling or retesting after an OOS result must follow a documented procedure <span class="wcite">1</span>. At Acme, SOP-QC-007 defines how such results are investigated, documented and closed <span class="wcite">2</span> <span class="wcite">3</span></p>
+            <div class="wverify">${ic("i-shield", 11)} Verify against the cited source before acting.</div>
+            <div class="wfoot"><span>👍</span><span>👎</span><span>Retrieval ${Math.round(s.retrieval_p50_ms)} ms · rerank ${Math.round(s.rerank_p50_ms)} ms (p50)</span><span>${ic("i-doc", 10)} Copy answer</span></div>
+          </div></div></div>
+        <div class="wcompose">Ask a question about GMP or your SOPs…<div class="row"><span class="wplus">+</span><span class="send">${ic("i-send", 10)} Send</span></div></div>
+      </div>
+      <div class="wcol"><div class="whead"><span>${ic("i-doc", 11)} Sources (3)</span></div>
+        <div class="wsmall">Only these passages were used to write the answer.</div>${src}</div>
+    </div>`;
+  $("#docs-all").innerHTML = D.documents.map((d) => `<span class="dchip" title="${esc(d.title)} · v ${esc(d.version)}"><code>${esc(d.doc_code)}</code>${d.fictional ? '<span class="badge badge-fict">Fictional</span>' : ""}<span>${d.passages} passages</span></span>`).join("");
+  $("#corpus-sub").textContent = `${s.documents} controlled documents (${s.public} public guidance, ${s.sops} fictional Acme SOPs) · ${s.passages} indexed passages · Hit@1 ${s.reranked["hit@1"].toFixed(2)} with reranker on ${s.dev_questions} dev questions.`;
+  $("#footer").innerHTML = `<span>© GMP Assistant — prototype. Retrieval is real (M1–M4); answer generation (M5), login and audit trail (M7) are not built yet. Acme Pharma Ltd. is fictional.</span>
+    <span>Data: ${esc(short(D.generated_with.embedding_model))} + ${esc(short(D.generated_with.reranker_model))}, commit ${esc(D.generated_with.git_commit)}</span>`;
+}
+
+/* ── chat ── */
+let current = null;
+function renderConvs() {
+  $("#conv-list").innerHTML = D.examples.map((e) =>
+    `<button class="conv${current === e.id ? " active" : ""}" data-ex="${e.id}">${esc(e.question)}</button>`).join("");
+}
+function emptyState() {
+  current = null; renderConvs();
+  $("#chat-title").textContent = "New chat";
+  $("#thread").innerHTML = `<div class="empty"><svg width="36" height="36" style="color:var(--primary)"><use href="#i-flask"/></svg>
+    <p>Ask a question about GMP guidance or Acme's SOPs.<br>Examples run the real full pipeline; typed questions use keyword search in your browser.</p>
+    <div class="chips">${D.examples.slice(0, 4).map((e) => `<button data-ex="${e.id}">${esc(e.question)}</button>`).join("")}</div></div>`;
+  $("#srclist").innerHTML = `<div class="empty">Sources appear here after you ask.</div>`;
+  $("#src-head").textContent = "Sources";
+}
+function sourceCard(s) {
+  return `<article class="src" id="src-${s.n}">
+    <div class="top"><span class="num">${s.n}</span><div><div class="code">${esc(s.doc_code)}</div><div class="title">${esc(s.doc_title)}</div></div></div>
+    <div class="meta"><span class="chip">§ ${esc(s.section)}</span><span>${esc(s.section_title)}</span></div>
+    <div class="meta"><span>Version ${esc(s.version)}</span>${pages(s) ? `<span>${pages(s)}</span>` : ""}${s.fictional ? '<span class="badge badge-fict">Fictional</span>' : ""}<span title="Ranking score">score ${s.score}</span></div>
+    <blockquote>${esc(s.excerpt)}${s.excerpt.length >= 700 ? "…" : ""}</blockquote>
+    <button class="more" data-more="${s.n}">Show more ⌄</button></article>`;
+}
+function ask(question, sources, mode, latency) {
+  $("#chat-title").textContent = question.length > 60 ? question.slice(0, 57) + "…" : question;
+  $("#src-head").textContent = "Sources";
+  $("#srclist").innerHTML = "";
+  $("#thread").innerHTML = `
+    <div class="msg"><span class="who">GP</span><div><b>You</b><div class="bubble">${esc(question)}</div></div></div>
+    <div class="msg"><span class="who bot"><svg width="16" height="16"><use href="#i-flask"/></svg></span>
+      <div class="answer" id="ans"><div class="status"><span class="spin"></span><span id="stage">Searching ${D.stats.documents} documents…</span></div></div></div>`;
+  // replay of the real stages (§17): searching → reranking → sources ready
+  if (mode === "pipeline") setTimeout(() => { $("#stage").textContent = "Reranking candidates…"; }, 450);
+  setTimeout(() => showResult(sources, mode, latency), 950);
+}
+function showResult(sources, mode, latency) {
+  $("#src-head").textContent = `Sources (${sources.length})`;
+  $("#srclist").innerHTML = sources.length ? sources.map(sourceCard).join("") : `<div class="empty">No passage shares a keyword with this question.</div>`;
+  const modeText = mode === "pipeline"
+    ? `Full pipeline: hybrid ${short(D.generated_with.embedding_model)} + BM25 → RRF → ${short(D.generated_with.reranker_model)} · measured p50 over ${D.stats.dev_questions} dev questions: ${Math.round(D.stats.retrieval_p50_ms)} ms + ${Math.round(D.stats.rerank_p50_ms)} ms`
+    : "Keyword search (BM25) in your browser — the real app adds dense search and the reranker";
+  $("#ans").innerHTML = sources.length ? `
+    <div class="pending"><b>Answer generation is not built yet (milestone M5).</b> The local LLM will write a cited answer from the passages below.</div>
+    <b style="font-size:14px">Retrieved evidence</b>
+    <ul class="evidence">${sources.map((s) => `<li><button class="cite" data-cite="${s.n}" title="${esc(s.doc_code)} §${esc(s.section)}">${s.n}</button><b>${esc(s.doc_code)}</b> §${esc(s.section)} — ${esc(s.section_title)}${pages(s) ? ` · ${pages(s)}` : ""}</li>`).join("")}</ul>
+    <div class="verify">✓ Verify against the cited source before acting.</div>
+    <div class="foot"><span class="mode">${esc(modeText)}</span></div>`
+    : `<div class="pending">The approved documents don't seem to cover this question. Try rephrasing.<br><small>(The real refusal rule uses a reranker-score threshold, tuned in M5.)</small></div>`;
+}
+function highlight(n) {
+  document.querySelectorAll(".src").forEach((el) => el.classList.toggle("hl", el.id === `src-${n}`));
+  const el = document.getElementById(`src-${n}`);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function runExample(id) {
+  const e = D.examples.find((x) => x.id === id);
+  current = id; renderConvs(); ask(e.question, e.sources, "pipeline", e.latency_ms);
+}
+
+/* ── routing + events ── */
+function route() {
+  const chat = location.hash.startsWith("#/chat");
+  $("#landing").classList.toggle("hidden", chat);
+  $("#chat").classList.toggle("hidden", !chat);
+  $("#site-header").classList.toggle("hidden", chat);
+  $("#app-header").classList.toggle("hidden", !chat);
+  $("#app-banner").classList.toggle("hidden", !chat);
+  document.body.classList.toggle("landing", !chat);
+  document.querySelectorAll(".nav a").forEach((a) => a.classList.toggle("active", a.dataset.route === (chat ? "chat" : "landing")));
+  if (chat && !$("#thread").innerHTML) emptyState();
+  if (!chat && location.hash.length > 2 && !location.hash.startsWith("#/")) {
+    document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
+  }
+}
+document.addEventListener("click", (ev) => {
+  const t = ev.target.closest("[data-ex],[data-cite],[data-more]");
+  if (!t) return;
+  if (t.dataset.ex) runExample(t.dataset.ex);
+  if (t.dataset.cite) highlight(t.dataset.cite);
+  if (t.dataset.more) { const c = document.getElementById(`src-${t.dataset.more}`); c.classList.toggle("open");
+    t.textContent = c.classList.contains("open") ? "Show less ⌃" : "Show more ⌄"; }
+});
+$("#new-chat").addEventListener("click", emptyState);
+$("#q").addEventListener("input", (e) => { $("#count").textContent = `${e.target.value.length}/1000`; });
+$("#q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#composer").requestSubmit(); } });
+$("#composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = $("#q").value.trim();
+  if (q.length < 3) return;
+  const known = D.examples.find((x) => x.question.toLowerCase() === q.toLowerCase());
+  $("#q").value = ""; $("#count").textContent = "0/1000";
+  if (known) return runExample(known.id);
+  current = null; renderConvs();
+  ask(q, BM25(q, 4).map((c, i) => ({ ...c, n: i + 1 })), "bm25");
+});
+window.addEventListener("hashchange", route);
+renderLanding(); renderConvs(); route();
+</script>
+</body>
+</html>

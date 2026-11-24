@@ -99,3 +99,14 @@
 - Explain-it: bi-encoder = question and chunk encoded separately (vectors precomputed, fast
   search over all chunks); cross-encoder = reads both together (more accurate, but one model
   pass per pair) → only affordable on ~20 candidates, never on the whole corpus.
+
+## 2026-11-24 — UI prototype (design preview, not M8)
+
+- `docs/prototype/`: self-contained landing page + chat screen following the mockups in
+  `docs/images/` (no CDN, works offline, responsive from phone to 1920 px). Photos are cropped
+  from the mockup; everything else is real data exported by `backend/scripts/prototype_data.py`:
+  19-document registry, hybrid + reranker results for dev questions, benchmark numbers.
+- Typed questions run BM25 over the real 681 chunks in the browser (checked equal to the
+  backend's BM25). Answers are not generated — marked "Sample answer · LLM in M5".
+- Features not built yet carry tags (M7 audit trail/roles, Tier 2 upload, Roadmap FMCG/GMA).
+- Dev questions only, so the test split stays unseen (§11.1).
