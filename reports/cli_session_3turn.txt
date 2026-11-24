@@ -1,0 +1,68 @@
+# Real CLI session: 3-turn conversation with llama3.1:8b (cold start, nothing cached)
+# Date 2026-11-24, git commit 3bd979b, machine state: 3333 MB RAM available, 2987 MB swap in use
+# Produced by: printf '<3 questions>' | python cli.py   (stdout only)
+
+Commands: /new (new conversation), /exit (quit). Anything else is a question.
+
+You> What must happen after an out-of-specification result?
+
+According to [1] ACME-SOP-QC-007 §1 Purpose (v3.0), the procedure defines how Acme Pharma Ltd. investigates, documents and closes any analytical result that falls outside an approved specification or acceptance criterion.
+
+Additionally, [2] ACME-SOP-QC-007 §8 References (v3.0) references ICH Q7, section 11.15, which states that out-of-specification results should be investigated and documented according to a procedure.
+
+Furthermore, [4] ICH-Q7 §11.15 General Controls (Step 4, 10 Nov 2000), p. 28 also states that any out-of-specification result obtained should be investigated and documented according to a procedure.
+
+Therefore, after an out-of-specification result, the following must happen:
+
+* Investigation of the root cause
+* Documentation of the investigation
+* Analysis of the data
+* Assessment of whether a significant problem exists
+* Allocation of tasks for corrective actions
+* Conclusions
+
+This is in accordance with [4] ICH-Q7 §11.15 General Controls (Step 4, 10 Nov 2000), p. 28.
+
+Sources:
+  [1] ACME-SOP-QC-007 §1 Purpose · 3.0 · SOP  [Fictional]  (score 1.2)  ← cited
+  [2] ACME-SOP-QC-007 §8 References · 3.0 · SOP  [Fictional]  (score 0.6)  ← cited
+  [3] ICH-Q9R1 §II.7 Quality Risk Management as Part of Laboratory Control and Stability Studies · Step 4, 18 Jan 2023 · p. 27  (score 0.4)
+  [4] ICH-Q7 §11.13–11.15 General Controls · Step 4, 10 Nov 2000 · p. 28  (score -0.2)  ← cited
+Verify against the cited source before acting.
+[answered · rewrite 0 ms · retrieval 23 ms · rerank 613 ms · first token 36713 ms · total 77699 ms]
+
+You> How long does Acme allow for the first laboratory investigation of it?
+
+According to [3], Phase I — laboratory investigation must be completed within **5 working days** of the OOS record being opened.
+(understood as: How long does Acme Pharma Ltd. allow for the first laboratory investigation of an out-of-specification analytical result?)
+
+Sources:
+  [1] ACME-SOP-QC-007 §0 SOP-QC-007 Out-of-Specification (OOS) Investigation · 3.0 · SOP  [Fictional]  (score 3.4)
+  [2] ACME-SOP-QC-007 §1 Purpose · 3.0 · SOP  [Fictional]  (score 2.6)
+  [3] ACME-SOP-QC-007 §5.2.1–5.2.3 Phase I — laboratory investigation · 3.0 · SOP  [Fictional]  (score 1.5)  ← cited
+  [4] ACME-SOP-QC-011 §0 SOP-QC-011 Analytical Data Review · 2.3 · SOP  [Fictional]  (score 0.8)
+Verify against the cited source before acting.
+[answered · rewrite 15236 ms · retrieval 101 ms · rerank 750 ms · first token 53783 ms · total 58432 ms]
+
+You> And when does a CAPA have to be raised in that case?
+
+According to [1] ICH Q7, section 11.1 General Controls, paragraph 11.15, out-of-specification results should be investigated and documented according to a procedure. However, the sources do not specify when a CAPA is required after an investigation.
+
+However, [2] ACME-SOP-QC-007 §5.6.1 states that a CAPA shall be raised under SOP-QA-008, CAPA Management, when:
+
+* The investigation identifies a confirmed assignable cause in the laboratory or the process;
+* The same or a similar OOS has occurred more than once in 12 months; or
+* A systemic quality risk is revealed, such as an unsuitable method or specification.
+
+Therefore, based on [2], a CAPA is required after an out-of-specification result has been investigated and documented when one of the above conditions is met.
+(understood as: When is a Corrective Action Preventive Action (CAPA) required after an out-of-specification result has been investigated and documented?)
+
+Sources:
+  [1] ACME-SOP-QC-007 §8 References · 3.0 · SOP  [Fictional]  (score 6.0)  ← cited
+  [2] ACME-SOP-QC-007 §5.6.1–5.6.2 Corrective and preventive actions · 3.0 · SOP  [Fictional]  (score 3.6)  ← cited
+  [3] ICH-Q10 §3.2.2 Corrective Action and Preventive Action (CAPA) System · Step 4, 4 Jun 2008 · p. 13  (score 3.0)
+  [4] ICH-Q10 §3.2.2 Corrective Action and Preventive Action (CAPA) System · Step 4, 4 Jun 2008 · p. 13  (score 2.6)
+Verify against the cited source before acting.
+[answered · rewrite 8313 ms · retrieval 95 ms · rerank 802 ms · first token 49463 ms · total 80495 ms]
+
+You> /exit
