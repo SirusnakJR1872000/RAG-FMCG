@@ -21,14 +21,7 @@ from config import PROJECT_ROOT, Settings, get_settings
 from src.ingestion.manifest import sha256_of
 from src.retrieval.embeddings import Embedder
 from src.retrieval.faiss_store import FaissStore
-
-
-def model_slug(model_name: str) -> str:
-    return model_name.strip("/").replace("/", "__")
-
-
-def index_dir(settings: Settings, model_name: str) -> Path:
-    return settings.index_dir / model_slug(model_name)
+from src.retrieval.indexes import index_dir
 
 
 def git_commit() -> str:

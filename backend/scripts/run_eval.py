@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from config import PROJECT_ROOT, Settings, get_settings
-from scripts.build_index import build, git_commit, index_dir, model_slug
+from scripts.build_index import build, git_commit
 from src.evaluation.golden import GoldenItem, load_golden, load_section_trees
 from src.evaluation.metrics import QuestionResult, first_hit_rank, score
 from src.ingestion.manifest import sha256_of
@@ -30,6 +30,7 @@ from src.retrieval.bm25_store import BM25Store
 from src.retrieval.embeddings import Embedder
 from src.retrieval.faiss_store import FaissStore
 from src.retrieval.hybrid import HybridRetriever
+from src.retrieval.indexes import index_dir, model_slug
 from src.retrieval.reranker import Reranker
 
 GOLDEN = PROJECT_ROOT / "backend/tests/golden/golden_set.jsonl"

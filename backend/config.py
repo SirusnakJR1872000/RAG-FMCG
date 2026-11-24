@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     candidates_per_retriever: int = Field(20, gt=0)
     rrf_k: int = Field(60, gt=0)
     context_chunks: int = Field(4, gt=0)
-    relevance_threshold: float = 0.0
+    relevance_threshold: float = -5.34  # D-15: reports/threshold.md (ms-marco reranker score)
     query_expansion: bool = False
     history_turns: int = Field(2, ge=0)
 

@@ -110,3 +110,37 @@
   backend's BM25). Answers are not generated — marked "Sample answer · LLM in M5".
 - Features not built yet carry tags (M7 audit trail/roles, Tier 2 upload, Roadmap FMCG/GMA).
 - Dev questions only, so the test split stays unseen (§11.1).
+
+## 2026-11-24 — M5: generation and CLI
+
+- Built (spec §8–§9, §17): async Ollama client (num_ctx 4096 on every call, typed errors for
+  Ollama down / model missing / timeout), grounded prompt exactly as §9.3, citation check,
+  follow-up rewriter, `RagPipeline` (stream() yields the §17 events, answer() returns a Result),
+  streaming CLI, `tune_threshold.py`, `measure_latency.py`, fake Ollama for tests (~380 tests).
+- **τ = -5.34** (reports/threshold.md). Dev: refusal 1 of 2, false refusals 0 of 18. The ICH Q12
+  near-miss (G-018) scores +2.8 on the reranker — higher than a genuine answerable question
+  (G-007, -1.7) — so no τ can refuse it within the 5 % false-refusal rule. In the real CLI the
+  model's own NOT_COVERED caught it; the Grade A question was refused with no LLM call (1 s).
+- **Real-model findings** (things the fake Ollama could not show):
+  1. The rewriter copied labels ("ACME-SOP-QC-007 §1 Purpose (v3.0)") from the previous answer
+     into the next question → search for the label → false NOT_COVERED. Fixed: prompt, citation
+     markers hidden in previews, rewrites containing §/[n]/(v3.0)/unknown doc codes rejected.
+  2. The rewriter paraphrased self-contained questions and drifted to the previous topic
+     ("Annex 11 … audit trails" → "… OOS documentation"). Probe on the real model: rank-1 hits
+     0/5 → 4/5 after "change as little as possible" + rewrite only questions that refer back.
+  3. Ollama caches processed prompts: an identical repeated question had a 1.4 s first token vs
+     ~38 s cold. measure_latency now unloads the model first.
+  4. Answers sometimes paste the source label ("According to [1] ACME-SOP-QC-007 §1 …"), and in
+     one turn put a wrong label next to a valid [n]. The citation check validates numbers only;
+     faithfulness is for the §11.2 evaluation. The §9.3 prompt is fixed by the spec, so prompt
+     changes would need an amendment.
+- **Latency** (reports/latency.md; busy laptop: 3.5 GB RAM free, 3 GB swap in use): retrieval
+  110 ms ✓, rerank 789 ms ✓, full answer p50 51 s ✓ (target 90), first token p50 38.7 s ✗
+  (target 30), 6 tokens/s. Memory: backend 1.0 GB, Ollama 5.3 GB. Prompts max 1,218 of 4,096
+  tokens. The §20 remedies (3 chunks, num_predict 300, …) were NOT applied: the miss was
+  measured under memory pressure and must be re-measured on a quiet machine first. That report
+  predates fix 2 above (its scripted turn 2 hit the refusal bug).
+- Explain-it: the prompt confines the model to <sources> and gives it NOT_COVERED, the citation
+  check and (later) the faithfulness judge show when it fails; one LLM at serving time because
+  2 would not fit 16 GB, and num_ctx is explicit because Ollama's default can truncate silently;
+  τ uses the reranker score because RRF scores depend only on rank positions.
