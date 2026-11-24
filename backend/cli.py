@@ -83,6 +83,8 @@ async def ask(pipeline: RagPipeline, question: str, history: list[Exchange]) -> 
                 if not answered_text:
                     print(event.result.answer, end="")
                 print()
+                if event.result.standalone_question != question:
+                    print(f"(understood as: {event.result.standalone_question})")
                 for line in format_footer(event.result):
                     print(line)
                 return event.result
@@ -105,6 +107,8 @@ async def chat(pipeline: RagPipeline) -> None:
         except (EOFError, KeyboardInterrupt):
             print()
             return
+        if not sys.stdin.isatty():
+            print(line)  # piped input is not echoed by a terminal: keep transcripts readable
         if line in ("/exit", "/quit"):
             return
         if line == "/new":

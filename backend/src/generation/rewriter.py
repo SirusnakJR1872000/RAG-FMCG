@@ -28,6 +28,25 @@ class Rewrite:
     failed: bool = False  # True if the call failed (original question used)
 
 
+_SECTION_SIGN = re.compile(r"§")
+_MARKER = re.compile(r"\[\d+")
+_VERSION = re.compile(r"\(v?\d+(?:\.\d+)*\)")
+_DOC_CODE = re.compile(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b")  # ICH-Q7, ACME-SOP-QC-007, EU-ANNEX11
+
+
+def introduces_source_labels(rewrite: str, question: str) -> bool:
+    """True if the rewrite contains source-label debris the user never typed.
+
+    Small models sometimes copy "ACME-SOP-QC-007 §1 Purpose (v3.0)" from the previous answer
+    into the new question, which then searches for the label instead of the topic.
+    A document code the user themselves wrote in the new question is fine.
+    """
+    if _SECTION_SIGN.search(rewrite) or _MARKER.search(rewrite) or _VERSION.search(rewrite):
+        return True
+    asked = question.upper()
+    return any(code.upper() not in asked for code in _DOC_CODE.findall(rewrite))
+
+
 def clean_rewrite(raw: str) -> str:
     """One line, no quotes or lead-in such as 'Standalone question:'."""
     lines = [ln.strip() for ln in raw.strip().splitlines() if ln.strip()]
@@ -49,5 +68,8 @@ async def rewrite_question(client: OllamaClient, question: str, history: Sequenc
     standalone = clean_rewrite(raw)
     if not standalone or len(standalone) > MAX_REWRITE_CHARS:
         log.warning("rewrite_unusable", raw=raw[:200])
+        return Rewrite(question, rewritten=False, failed=True)
+    if introduces_source_labels(standalone, question):
+        log.warning("rewrite_copied_source_labels", raw=raw[:200])
         return Rewrite(question, rewritten=False, failed=True)
     return Rewrite(standalone, rewritten=True)

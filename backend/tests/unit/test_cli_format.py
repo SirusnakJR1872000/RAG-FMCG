@@ -52,3 +52,36 @@ def test_sources_the_answer_actually_cites_are_marked():
     lines = format_footer(result(sources=[src(1), src(2)], check=CitationCheck("ok", [2])))
     marked = [ln for ln in lines if "← cited" in ln]
     assert len(marked) == 1 and marked[0].startswith("  [2]")
+
+
+class StubPipeline:
+    """Yields the events of one finished answer, like RagPipeline.stream()."""
+
+    def __init__(self, standalone):
+        self.standalone = standalone
+
+    async def stream(self, question, history):
+        from src.generation.pipeline import Done, Status, Token
+
+        yield Status("retrieving")
+        yield Token("Five working days [1].")
+        r = result(check=CitationCheck("ok", [1]))
+        r.standalone_question = self.standalone
+        yield Done(r)
+
+
+async def test_ask_prints_the_answer_and_how_a_follow_up_was_understood(capsys):
+    from cli import ask
+
+    out = await ask(StubPipeline("How long is Phase I at Acme?"), "how long is it?", [])
+    printed = capsys.readouterr().out
+    assert out is not None and "Five working days [1]." in printed
+    assert "(understood as: How long is Phase I at Acme?)" in printed
+    assert "Sources:" in printed and "← cited" in printed
+
+
+async def test_ask_does_not_repeat_a_question_that_was_already_standalone(capsys):
+    from cli import ask
+
+    await ask(StubPipeline("What is Phase I?"), "What is Phase I?", [])
+    assert "understood as" not in capsys.readouterr().out

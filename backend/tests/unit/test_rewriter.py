@@ -57,3 +57,25 @@ def test_clean_rewrite():
     assert clean_rewrite('Standalone question: "Who approves a CAPA?"\nExplanation...') \
         == "Who approves a CAPA?"
     assert clean_rewrite("  \n  ") == ""
+
+
+async def test_rewrite_that_copies_source_labels_is_rejected():
+    # the real failure seen with llama3.1:8b: labels from the previous answer leaked in
+    bad = ("What is the time frame allowed by ACME-SOP-QC-007 §1 Purpose (v3.0) and "
+           "ICH-Q7 §11.15 for the initial investigation?")
+    fake = FakeOllama(rewrite=bad)
+    result = await rewrite_question(client(fake), "how long does Acme allow for it?",
+                                    HISTORY, 2, 64)
+    assert (result.question, result.failed) == ("how long does Acme allow for it?", True)
+
+
+def test_label_detection():
+    from src.generation.rewriter import introduces_source_labels as bad
+
+    assert bad("What does §11.15 say?", "what does it say?")
+    assert bad("What does the SOP say [1]?", "what does it say?")
+    assert bad("What is required (v3.0)?", "what is required?")
+    assert bad("What does ICH-Q7 require for OOS?", "what does it require for OOS?")
+    assert not bad("What does ICH-Q7 require for OOS?", "what does ICH-Q7 require for it?")
+    assert not bad("What does ICH Q7 say about reprocessing?", "and reprocessing?")
+    assert not bad("Who approves a CAPA at Acme?", "who approves it?")

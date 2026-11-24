@@ -6,6 +6,10 @@ Runs the real pipeline (real models, real Ollama): one warm-up question that is 
 then `--n` dev questions (START_HERE M5: 10), then a scripted 3-turn conversation so the
 follow-up rewrite is measured too. Writes reports/latency.md and reports/latency.json.
 
+Ollama caches the processed prompt of recent requests, so asking the same question again
+within the 30-minute keep-alive is much faster than a first-time question. The script unloads
+the model first so that every run starts cold.
+
 Honest by construction: the report records how busy the machine was (free RAM, swap) because
 latency on a 16 GB laptop with a browser open is not the latency of an idle server.
 """
@@ -145,6 +149,7 @@ async def measure(n: int) -> dict:
     settings = get_settings()
     dev = [g.question for g in load_golden(GOLDEN) if g.split == "dev" and g.answerable][:n]
     pipeline = RagPipeline(settings)
+    await pipeline.client.unload()  # a cold start: no cached prompts from earlier questions
     await pipeline.warm_up()
     print("warm-up question …", flush=True)
     await pipeline.answer(WARMUP)

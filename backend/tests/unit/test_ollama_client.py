@@ -92,3 +92,12 @@ async def test_ping_and_loaded_models():
     fake.fail = httpx.ConnectError("down")
     assert await client.ping() is False
     assert await client.loaded_models() == []
+
+
+async def test_unload_sends_keep_alive_zero():
+    fake = FakeOllama()
+    await make(fake).unload()
+    assert fake.generate_calls[0]["keep_alive"] == 0
+    fake.fail = httpx.ConnectError("down")
+    with pytest.raises(LLMUnavailable):
+        await make(fake).unload()

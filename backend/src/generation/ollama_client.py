@@ -160,6 +160,19 @@ class OllamaClient:
             raise self._unavailable(exc) from exc
         self._raise_for_status(response)
 
+    async def unload(self) -> None:
+        """Drop the model from RAM (keep_alive 0).
+
+        Ollama keeps the processed prompt of recent requests; asking the same thing again is
+        then answered much faster than a first-time question. Latency must be measured from
+        a cold model, so measure_latency.py unloads it first.
+        """
+        try:
+            await self._http.post("/api/generate", json={"model": self.model, "prompt": "",
+                                                          "keep_alive": 0})
+        except httpx.TransportError as exc:
+            raise self._unavailable(exc) from exc
+
     async def loaded_models(self) -> list[dict]:
         """Models currently resident in Ollama's memory (name, size in bytes)."""
         try:

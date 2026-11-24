@@ -24,6 +24,8 @@ REWRITE_SYSTEM_PROMPT = """You rewrite follow-up questions. Given a short conver
 question, write ONE standalone question that contains everything needed to understand it
 without the conversation (replace pronouns like "it" or "that" with what they refer to).
 If the new question is already standalone, repeat it unchanged.
+Use only the subject matter of the conversation. Never copy document codes, section numbers,
+version numbers or citation markers such as [1] into the question.
 Output only the standalone question: no quotes, no explanation, at most 40 words."""
 
 
@@ -70,13 +72,16 @@ def build_answer_prompt(question: str, sources: Sequence[PromptSource]) -> tuple
 
 
 ANSWER_PREVIEW_CHARS = 300  # §9.5: only the start of each earlier answer is shown
+# "[1]" means nothing to the rewriter, which never sees the sources
+_CITATION_MARKER = re.compile(r"\s*\[\d+(?:\s*[,;\-–]\s*\d+)*\]")
 
 
 def build_rewrite_prompt(question: str, history: Sequence[Exchange]) -> tuple[str, str]:
     """(system, user) messages for the follow-up rewrite call (§9.5)."""
     turns = []
     for ex in history:
-        answer = ex.answer.strip().replace("\n", " ")[:ANSWER_PREVIEW_CHARS]
+        text = _CITATION_MARKER.sub("", ex.answer.strip().replace("\n", " "))
+        answer = text[:ANSWER_PREVIEW_CHARS]
         turns.append(f"User: {ex.question}\nAssistant: {answer}")
     conversation = "\n".join(turns)
     user = f"Conversation:\n{conversation}\n\nNew question: {question}\n\nStandalone question:"

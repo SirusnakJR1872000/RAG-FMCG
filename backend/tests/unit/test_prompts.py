@@ -66,3 +66,11 @@ def test_rewrite_prompt_uses_the_given_exchanges_and_truncates_answers():
     assert "A" * 301 not in user  # §9.5: first 300 characters only
     assert "New question: and who approves it?" in user
     assert user.rstrip().endswith("Standalone question:")
+
+
+def test_rewrite_prompt_hides_citation_markers_from_the_previous_answers():
+    history = [Exchange("What is a CAPA?", "A CAPA fixes causes [1]. It needs approval [2, 3].")]
+    system, user = build_rewrite_prompt("who approves it?", history)
+    assert "[1]" not in user and "[2, 3]" not in user
+    assert "Assistant: A CAPA fixes causes. It needs approval." in user
+    assert "Never copy document codes, section numbers" in system
