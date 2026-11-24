@@ -24,6 +24,8 @@ class FakeOllama:
         self.fail: Exception | None = None  # raised for every call (e.g. httpx.ConnectError)
         self.fail_rewrite: Exception | None = None  # raised only for rewrite calls
         self.status: int = 200  # HTTP status for /api/chat (404 = model not pulled)
+        self.pieces: list[str] | None = None  # exact token pieces of the answer (default: words)
+        self.done_reason = "stop"  # "length" = the answer was cut off at num_predict
         self.models_loaded = [{"name": "llama3.1:8b", "size": 6_000_000_000}]
 
     # ── helpers for assertions ──
@@ -62,8 +64,11 @@ class FakeOllama:
         if rewrite and self.fail_rewrite is not None:
             raise self.fail_rewrite
         text = self.rewrite if rewrite else self.answer
-        pieces = [w + " " for w in text.split(" ")]
-        pieces[-1] = pieces[-1].rstrip()
+        if self.pieces is not None and not rewrite:
+            pieces = list(self.pieces)
+        else:
+            pieces = [w + " " for w in text.split(" ")]
+            pieces[-1] = pieces[-1].rstrip()
         if not body.get("stream", True):
             return httpx.Response(200, json=self._final(text))
         lines = [json.dumps({"message": {"role": "assistant", "content": p}, "done": False})
@@ -71,9 +76,8 @@ class FakeOllama:
         lines.append(json.dumps(self._final("")))
         return httpx.Response(200, content="\n".join(lines).encode())
 
-    @staticmethod
-    def _final(text: str) -> dict:
+    def _final(self, text: str) -> dict:
         return {"message": {"role": "assistant", "content": text}, "done": True,
-                "done_reason": "stop", "prompt_eval_count": 1200, "eval_count": 40,
+                "done_reason": self.done_reason, "prompt_eval_count": 1200, "eval_count": 40,
                 "load_duration": 0, "prompt_eval_duration": 2_000_000_000,
                 "eval_duration": 10_000_000_000}

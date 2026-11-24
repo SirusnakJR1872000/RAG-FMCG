@@ -18,6 +18,13 @@ class ManifestError(ValueError):
     """The manifest is missing, malformed, or breaks a lifecycle rule."""
 
 
+FICTIONAL_PREFIX = "ACME-"  # every internal SOP of the fictional company (§1.4)
+
+
+def is_fictional_code(doc_code: str) -> bool:
+    return doc_code.startswith(FICTIONAL_PREFIX)
+
+
 class ManifestEntry(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -48,7 +55,7 @@ class ManifestEntry(BaseModel):
 
     @property
     def is_fictional(self) -> bool:
-        return self.doc_code.startswith("ACME-")
+        return is_fictional_code(self.doc_code)
 
 
 def load_manifest(path: Path) -> list[ManifestEntry]:
