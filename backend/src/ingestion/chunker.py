@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from src.ingestion.sections import Section
+from src.model_paths import resolve_model
 
 # Sentence end: . ! ? followed by space and a capital, digit, quote or bracket.
 # "e.g. the" or "approx. 5" (lowercase / mid-sentence) are not split.
@@ -50,7 +51,7 @@ class TokenCounter:
     def _tokenizer(self):
         from transformers import AutoTokenizer  # heavy import, only when actually counting
 
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(resolve_model(self.model_name))
         # We only *count* tokens of long texts before splitting them; never feed them to the
         # model. This silences "sequence length is longer than the maximum" warnings.
         tokenizer.model_max_length = 10**9

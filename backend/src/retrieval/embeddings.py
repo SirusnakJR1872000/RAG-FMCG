@@ -11,6 +11,8 @@ from functools import cached_property
 
 import numpy as np
 
+from src.model_paths import resolve_model
+
 # family marker in the model name → (query prefix, passage prefix), PROJECT_SPEC §8.3
 PREFIXES: dict[str, tuple[str, str]] = {
     "bge-": ("Represent this sentence for searching relevant passages: ", ""),
@@ -40,7 +42,7 @@ class Embedder:
             return self._injected
         from sentence_transformers import SentenceTransformer  # heavy: torch
 
-        return SentenceTransformer(self.model_name, device="cpu")
+        return SentenceTransformer(resolve_model(self.model_name), device="cpu")
 
     @property
     def dim(self) -> int:

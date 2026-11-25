@@ -19,6 +19,7 @@ import pandas as pd
 
 from config import PROJECT_ROOT, Settings, get_settings
 from src.ingestion.manifest import sha256_of
+from src.model_paths import resolve_model
 from src.retrieval.embeddings import Embedder
 from src.retrieval.faiss_store import FaissStore
 from src.retrieval.indexes import index_dir
@@ -35,18 +36,17 @@ def git_commit() -> str:
 
 
 def model_hash(embedder: Embedder) -> str:
-    """Hugging Face commit of the model, or SHA-256 of a local model folder's files."""
-    revision = getattr(embedder.model.model_card_data, "base_model_revision", None)
-    if revision:
-        return f"hf:{revision}"
-    local = Path(embedder.model_name)
+    """SHA-256 of a local model folder's files (our fine-tuned model), or the Hugging Face
+    commit of a downloaded model."""
+    local = Path(resolve_model(embedder.model_name))
     if local.is_dir():
         digest = hashlib.sha256()
         for path in sorted(p for p in local.rglob("*") if p.is_file()):
             digest.update(path.relative_to(local).as_posix().encode())
             digest.update(sha256_of(path).encode())
         return f"sha256:{digest.hexdigest()}"
-    return "unknown"
+    revision = getattr(embedder.model.model_card_data, "base_model_revision", None)
+    return f"hf:{revision}" if revision else "unknown"
 
 
 def build(settings: Settings, model_name: str) -> dict:
