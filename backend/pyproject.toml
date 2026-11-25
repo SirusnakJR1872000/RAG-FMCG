@@ -11,6 +11,14 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "S"]   # S = security checks (flags pickle, asserts, etc.)
 ignore = ["S101"]                          # allow assert in tests
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom: `def endpoint(x = Depends(...))`
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Security", "fastapi.Query",
+                          "fastapi.Body", "fastapi.Header", "fastapi.Cookie", "fastapi.Path"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]            # dummy passwords in test code
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
