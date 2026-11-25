@@ -66,7 +66,7 @@ def current_user_even_if_password_change_pending(
     return _authenticate(request, credentials, allow_pending_change=True)
 
 
-def _deny(request: Request, ctx: AuthContext, needed: str) -> ApiError:
+def deny(request: Request, ctx: AuthContext, needed: str) -> ApiError:
     with get_db(request).write() as conn:
         log(conn, "ACCESS_DENIED", ctx.actor, {
             "endpoint": f"{request.method} {request.url.path}", "permission": needed})
@@ -78,7 +78,7 @@ def require(permission: str):
 
     def dependency(request: Request, ctx: AuthContext = Depends(current_user)) -> AuthContext:
         if not has_permission(ctx.user["role"], permission):
-            raise _deny(request, ctx, permission)
+            raise deny(request, ctx, permission)
         return ctx
 
     return dependency
@@ -89,7 +89,7 @@ def require_any(*permissions: str):
 
     def dependency(request: Request, ctx: AuthContext = Depends(current_user)) -> AuthContext:
         if not any(has_permission(ctx.user["role"], p) for p in permissions):
-            raise _deny(request, ctx, " or ".join(permissions))
+            raise deny(request, ctx, " or ".join(permissions))
         return ctx
 
     return dependency

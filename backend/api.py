@@ -29,15 +29,21 @@ from database.init_db import SYSTEM_USER_ID, init_db, utc_now
 from database.session import Database
 from errors import ApiError, error_body, new_request_id
 from routers import auth as auth_router
+from routers import conversations as conversations_router
+from routers import feedback as feedback_router
 from routers import health as health_router
+from routers import history as history_router
 from routers import me as me_router
+from routers import query as query_router
 from services.index_manager import IndexManager
 from services.llm_queue import LLMQueue
 from version import APP_VERSION, git_commit
 
 log_ = structlog.get_logger(__name__)
 SYSTEM_ACTOR = Actor(SYSTEM_USER_ID, "system", "system")
-ROUTERS = [auth_router.router, me_router.router, health_router.router]
+ROUTERS = [auth_router.router, me_router.router, health_router.router,
+           conversations_router.router, query_router.router, feedback_router.router,
+           history_router.router]
 
 
 class RequestIdMiddleware:

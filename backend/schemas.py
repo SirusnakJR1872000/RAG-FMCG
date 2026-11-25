@@ -38,3 +38,14 @@ class MeResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = Field(description="ready | degraded | not_ready")
+
+
+class QueryRequest(Strict):
+    question: str = Field(min_length=3, max_length=1000)
+    conversation_id: str | None = Field(default=None, max_length=64)
+
+
+class FeedbackRequest(Strict):
+    query_event_id: str = Field(min_length=1, max_length=64)
+    rating: int = Field(description="1 = helpful, -1 = not helpful")
+    comment: str | None = Field(default=None, max_length=1000)

@@ -83,10 +83,14 @@ def client(make_client):
 
 
 def add_user(client, username, role="viewer", password=PASSWORD, must_change=False):
-    """Create a user directly in the app's database (as `create_admin.py` would)."""
+    """Create a user directly in the app's database (as `create_admin.py` would).
+
+    `client` may be a TestClient or the FastAPI app itself (async tests have no TestClient).
+    """
     from audit.writer import Actor
 
-    with client.app.state.db.write() as conn:
+    app = getattr(client, "app", client)
+    with app.state.db.write() as conn:
         user = service.create_user(conn, username=username, full_name=username.title(),
                                    role=role, password=password, created_by=None,
                                    actor=Actor(None, "test-setup"),
