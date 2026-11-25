@@ -177,3 +177,17 @@
   chain hash covers the previous row's hash, so editing any row breaks every later link and
   `verify()` names the first broken `seq`; refresh tokens rotate so a stolen copy is detected
   the moment both copies are used.
+
+## 2026-11-25 — M6: fine-tuning result (D-12)
+
+- Trained `models/pharma-e5-small-v2-v1` (1,594 pairs, 2 epochs, 100 steps, 25 min on CPU);
+  validation loss 2.05 → 0.15. Report: `reports/finetune_results.md`.
+- **Decision: do not adopt** (§10.4, dev split, full pipeline): dev Hit@5 0.944 and MRR@10 0.954
+  for both models: no question changed rank. `EMBEDDING_MODEL` stays `intfloat/e5-small-v2`.
+- Test (reported once, not used): Hit@5 0.926 → 0.963 (one question, G-048, rank 6 → 5), MRR@10
+  0.848 → 0.849: within the one-question noise.
+- Worth explaining: WITHOUT the reranker the fine-tuned model is clearly worse (dev Hit@1 0.778
+  → 0.556, MRR@10 0.842 → 0.705). The validation loss measures matching generated questions to
+  their own chunk, which the model learned; it does not measure ranking among near-duplicate
+  GMP passages for human questions. Likely causes: llama3.2:3b questions copy the chunk's words,
+  and 1,594 pairs from 617 chunks over-fit a 33M-parameter model. The reranker hides the damage.
