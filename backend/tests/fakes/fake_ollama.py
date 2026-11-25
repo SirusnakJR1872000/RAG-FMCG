@@ -24,6 +24,7 @@ class FakeOllama:
         self.fail: Exception | None = None  # raised for every call (e.g. httpx.ConnectError)
         self.fail_rewrite: Exception | None = None  # raised only for rewrite calls
         self.status: int = 200  # HTTP status for /api/chat (404 = model not pulled)
+        self.fail_times: int = 0  # the next N chat calls fail with HTTP 500, then work again
         self.pieces: list[str] | None = None  # exact token pieces of the answer (default: words)
         self.done_reason = "stop"  # "length" = the answer was cut off at num_predict
         self.models_loaded = [{"name": "llama3.1:8b", "size": 6_000_000_000}]
@@ -58,6 +59,9 @@ class FakeOllama:
             return httpx.Response(200, json={"done": True})
         body = json.loads(request.content)
         self.requests.append(body)
+        if self.fail_times > 0:
+            self.fail_times -= 1
+            return httpx.Response(500, json={"error": "runner crashed"})
         if self.status != 200:
             return httpx.Response(self.status, json={"error": "model not found"})
         rewrite = self._is_rewrite(body)

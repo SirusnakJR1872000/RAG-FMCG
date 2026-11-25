@@ -50,9 +50,12 @@ class CallStats:
 
 
 class OllamaClient:
-    def __init__(self, settings: Settings, transport: httpx.AsyncBaseTransport | None = None):
+    def __init__(self, settings: Settings, transport: httpx.AsyncBaseTransport | None = None,
+                 model: str | None = None):
         self.settings = settings
-        self.model = settings.llm_model
+        # llama3.1:8b is the only model loaded while serving (D-08); the offline question
+        # generator passes llama3.2:3b (D-09) here.
+        self.model = model or settings.llm_model
         self._timeout = settings.llm_timeout_seconds
         self._http = httpx.AsyncClient(
             base_url=settings.ollama_base_url,
@@ -64,9 +67,10 @@ class OllamaClient:
         await self._http.aclose()
 
     # ── request building ──
-    def _payload(self, system: str, user: str, max_tokens: int, stream: bool) -> dict:
+    def _payload(self, system: str, user: str, max_tokens: int, stream: bool,
+                 options: dict | None = None) -> dict:
         s = self.settings
-        return {
+        payload = {
             "model": self.model,
             "stream": stream,
             "keep_alive": s.llm_keep_alive,
@@ -80,6 +84,8 @@ class OllamaClient:
                 "num_predict": max_tokens,
             },
         }
+        payload["options"].update(options or {})  # e.g. a higher temperature for generation
+        return payload
 
     def _unavailable(self, exc: Exception) -> LLMUnavailable:
         return LLMUnavailable(
@@ -94,21 +100,22 @@ class OllamaClient:
             raise OllamaError(f"Ollama returned HTTP {response.status_code}")
 
     # ── generation ──
-    async def chat(self, system: str, user: str, max_tokens: int) -> tuple[str, CallStats]:
+    async def chat(self, system: str, user: str, max_tokens: int,
+                   options: dict | None = None) -> tuple[str, CallStats]:
         """Blocking call: the whole answer at once."""
         stats = CallStats()
-        text = "".join([t async for t in self.chat_stream(system, user, max_tokens, stats)])
-        return text, stats
+        pieces = self.chat_stream(system, user, max_tokens, stats, options)
+        return "".join([t async for t in pieces]), stats
 
     async def chat_stream(self, system: str, user: str, max_tokens: int,
-                          stats: CallStats | None = None) -> AsyncIterator[str]:
+                          stats: CallStats | None = None,
+                          options: dict | None = None) -> AsyncIterator[str]:
         """Yield the answer piece by piece. Stops cleanly if the consumer stops iterating."""
         stats = stats if stats is not None else CallStats()
         deadline = time.monotonic() + self._timeout  # whole-call limit (httpx limits each wait)
+        payload = self._payload(system, user, max_tokens, True, options)
         try:
-            async with self._http.stream(
-                    "POST", "/api/chat", json=self._payload(system, user, max_tokens, True),
-            ) as response:
+            async with self._http.stream("POST", "/api/chat", json=payload) as response:
                 if response.is_error:
                     await response.aread()
                     self._raise_for_status(response)
