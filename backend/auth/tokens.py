@@ -18,7 +18,6 @@ from dataclasses import dataclass
 import jwt
 from sqlalchemy import Connection, insert, select, update
 
-from database.init_db import utc_now
 from database.models import refresh_tokens
 
 ALGORITHM = "HS256"
@@ -143,12 +142,3 @@ def revoke_all_sessions(conn: Connection, user_id: str) -> None:
     """Password change, deactivation or role change: every session of the user ends."""
     conn.execute(update(refresh_tokens).where(refresh_tokens.c.user_id == user_id)
                  .values(revoked=1))
-
-
-def now_utc() -> dt.datetime:
-    return dt.datetime.now(dt.UTC)
-
-
-__all__ = ["RotateResult", "Session", "TokenError", "create_access_token", "decode_access_token",
-           "fmt_ts", "now_utc", "parse_ts", "revoke_all_sessions", "revoke_session", "rotate",
-           "start_session", "token_jti", "utc_now"]
