@@ -224,3 +224,18 @@
      helpers the tests use) and `set-state-in-effect` (the "reset to loading, then fetch" pattern).
 - Dev setup: the backend's `SITE_ORIGIN` must be `http://localhost:5173` when using the Vite dev
   server, or refresh and logout are refused (Origin check, §13.1). Documented in `.env.example`.
+
+## 2026-11-25 — Public landing page (proposed amendment A-05)
+
+- **Owner's decision (2026-11-25):** build the prototype's landing page in the React app as a
+  public `/welcome` page. This departs from PROJECT_SPEC §18.1 (no landing route) and design
+  brief §9.1 / §9.3 #13 ("Not built"); recorded here as proposed amendment **A-05**.
+  PROJECT_SPEC.md has NOT been edited.
+- Behaviour: a signed-out visit to `/` goes to `/welcome`; deep links (e.g. `/history`) still go
+  to `/login`; signed-in users still land on Chat (auditors on Audit). No spec route changed.
+- Content rule chosen by the owner: accurate claims only. "Request Demo" → "Sign in"; FMCG/GMA
+  shown only with a "Roadmap" tag; compliance worded "designed to support"; the chat picture is
+  captioned "Illustration". The document list mirrors corpus/manifest.yaml and a Vitest test fails
+  if they drift (the page is public, so it cannot call the authenticated /api/documents).
+- Photos: the prototype's crops of the owner's mockups (`docs/images/`), copied to
+  `frontend/public/landing/`.

@@ -1,7 +1,7 @@
 // Sign in (design brief §5.1). Unknown user, wrong password and deactivated account all get the
 // same message on purpose: the form must not reveal which accounts exist.
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import Icon from '../components/Icon'
 import { Button, Card, Field, INPUT, PasswordInput } from '../components/ui'
@@ -75,6 +75,7 @@ export default function Login() {
           </form>
         </Card>
         <p className="mt-4 text-center text-xs text-muted">Authorised users only. All activity is recorded.</p>
+        <p className="mt-2 text-center text-xs"><Link to="/welcome" className="text-primary hover:underline">About GMP Assistant</Link></p>
       </div>
     </div>
   )

@@ -84,6 +84,18 @@ test('a viewer asks a question and an auditor sees it in the audit trail', async
   await expect(page).toHaveURL(/\/audit$/)
 })
 
+test('a signed-out visitor lands on the public welcome page and can sign in from it', async ({ page }) => {
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/welcome$/)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Knowledge Assistant')
+  await expect(page.getByText('Request Demo')).toHaveCount(0) // design brief §9.3 #13
+  await expect(page.locator('#documents').getByText('ACME-SOP-QC-007')).toBeVisible()
+  await page.getByRole('banner').getByRole('link', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+  await page.goto('/history') // a deep link goes straight to sign-in
+  await expect(page).toHaveURL(/\/login$/)
+})
+
 test('an admin sees every menu and the user list', async ({ page }) => {
   await signIn(page, 'e2e_admin')
   expect(await menus(page)).toEqual(['Chat', 'History', 'Documents', 'Audit', 'Users'])

@@ -1,4 +1,5 @@
-// Routes (PROJECT_SPEC §18.1). A route hidden from a role is also guarded here, but the real
+// Routes (PROJECT_SPEC §18.1, plus the public /welcome page of amendment A-05).
+// A route hidden from a role is also guarded here, but the real
 // check is the backend's: this only avoids showing pages that would answer 403.
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth/AuthProvider'
@@ -13,6 +14,7 @@ import Documents from './pages/Documents'
 import History from './pages/History'
 import Login from './pages/Login'
 import Users from './pages/Users'
+import Welcome from './pages/Welcome'
 
 function RequireSignIn({ children }) {
   const { user, status } = useAuth()
@@ -20,7 +22,11 @@ function RequireSignIn({ children }) {
   if (status === 'loading') {
     return <div className="grid h-full place-items-center text-muted"><Spinner className="h-8 w-8" /></div>
   }
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (!user) {
+    // the front door is the public landing page; a deep link goes straight to sign-in
+    const to = location.pathname === '/' ? '/welcome' : '/login'
+    return <Navigate to={to} replace state={{ from: location.pathname }} />
+  }
   if (user.must_change_password && location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />
   }
@@ -35,6 +41,7 @@ function Allowed({ any, children }) {
 export default function App() {
   return (
     <Routes>
+      <Route path="/welcome" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/change-password" element={
         <RequireSignIn><SystemStatusProvider><ChangePassword /></SystemStatusProvider></RequireSignIn>} />
