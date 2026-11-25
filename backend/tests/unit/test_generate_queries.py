@@ -2,12 +2,16 @@
 
 import json
 
+import httpx
 import pandas as pd
+import pytest
 
+from config import Settings
 from src.evaluation.golden import Expected, GoldenItem, SectionTree
 from src.finetuning.generate_queries import (
     MAX_WORDS,
     build_prompt,
+    chat_with_retry,
     filter_questions,
     leaked_chunk_ids,
     normalise,
@@ -15,7 +19,9 @@ from src.finetuning.generate_queries import (
     pick_chunks,
     read_raw,
 )
+from src.generation.ollama_client import LLMUnavailable, OllamaClient, OllamaError
 from src.ingestion.sections import Section
+from tests.fakes.fake_ollama import FakeOllama
 
 # ── leakage control ──────────────────────────────────────────────────────────────────────
 
@@ -159,3 +165,40 @@ def test_trial_subsets_are_deterministic_and_keep_document_order():
     assert len(sample) == 8 and sample == pick_chunks(ids, sample=8)
     assert sample == sorted(sample, key=lambda c: int(c[1:]))
     assert len(pick_chunks(ids, sample=999)) == 50
+
+
+# ── retries ──────────────────────────────────────────────────────────────────────────────
+
+SETTINGS = Settings(_env_file=None, jwt_secret_key="x" * 64)
+
+
+def small_client(fake):
+    return OllamaClient(SETTINGS, transport=fake.transport(), model="llama3.2:3b")
+
+
+async def test_a_transient_http_500_is_retried_and_then_succeeds():
+    fake = FakeOllama(answer="Q one here is a fine question?")
+    fake.fail_times = 2
+    pauses = []
+
+    async def fake_sleep(seconds):
+        pauses.append(seconds)
+
+    reply = await chat_with_retry(small_client(fake), "s", "u", wait=20, sleep=fake_sleep)
+    assert reply == "Q one here is a fine question?"
+    assert len(fake.requests) == 3 and pauses == [20, 20]
+    assert all(r["model"] == "llama3.2:3b" and r["options"]["temperature"] == 0.7
+               for r in fake.requests)
+
+
+async def test_a_permanent_failure_is_raised_after_the_retries():
+    fake = FakeOllama()
+    fake.fail = httpx.ConnectError("down")
+
+    async def no_sleep(seconds):
+        pass
+
+    with pytest.raises(LLMUnavailable):
+        await chat_with_retry(small_client(fake), "s", "u", retries=2, sleep=no_sleep)
+    assert len(fake.paths) == 3  # the first try and two retries
+    assert issubclass(LLMUnavailable, OllamaError)

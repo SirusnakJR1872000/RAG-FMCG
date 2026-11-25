@@ -179,6 +179,26 @@ def pick_chunks(eligible: list[str], limit: int = 0, sample: int = 0) -> list[st
     return eligible[:limit] if limit else eligible
 
 
+RETRIES = 4  # a 3-hour job must not die on one HTTP 500 (the runner restarts under memory pressure)
+RETRY_WAIT_SECONDS = 20
+
+
+async def chat_with_retry(client: OllamaClient, system: str, user: str, *, retries: int = RETRIES,
+                          wait: float = RETRY_WAIT_SECONDS, sleep=asyncio.sleep) -> str:
+    """One generation call; a failed call is repeated after a pause, then the error is raised."""
+    for attempt in range(retries + 1):
+        try:
+            reply, _ = await client.chat(system, user, MAX_TOKENS, GENERATION_OPTIONS)
+            return reply
+        except OllamaError as exc:
+            if attempt == retries:
+                raise
+            print(f"    [{exc.code}] {exc} — retry {attempt + 1}/{retries} in {wait:.0f} s",
+                  flush=True)
+            await sleep(wait)
+    raise AssertionError("unreachable")
+
+
 # ── the long step: generation ────────────────────────────────────────────────────────────
 
 def read_raw(path: Path) -> list[dict]:
@@ -205,7 +225,7 @@ async def generate(settings: Settings, chunks: pd.DataFrame, eligible: list[str]
         await big.unload()
         for i, chunk_id in enumerate(todo, start=1):
             system, user = build_prompt(text[chunk_id])
-            reply, _ = await small.chat(system, user, MAX_TOKENS, GENERATION_OPTIONS)
+            reply = await chat_with_retry(small, system, user)
             row = {"chunk_id": chunk_id, "questions": parse_questions(reply),
                    "model": settings.question_gen_model,
                    "generated_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")}
