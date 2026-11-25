@@ -144,3 +144,36 @@
   check and (later) the faithfulness judge show when it fails; one LLM at serving time because
   2 would not fit 16 GB, and num_ctx is explicit because Ollama's default can truncate silently;
   τ uses the reranker score because RRF scores depend only on rank positions.
+
+## 2026-11-25 — M7: backend API, authentication and audit
+
+- Built (spec §12–§17, §19, §24.1): SQLite schema as SQLAlchemy Core with the audit triggers and
+  the one-active-version index; hash-chained audit trail with a single `log()` writer and
+  `verify()`; Argon2id passwords with the §13.2 policy; JWT access tokens (HS256 only, role
+  re-read from the database on every request); rotating refresh tokens with reuse detection and
+  an Origin check; lockout; the §13.3 permission matrix; FastAPI app with a uniform error body,
+  request ids and rate limits; one-at-a-time LLM queue; blocking and SSE query endpoints;
+  history (read from the audit events), feedback, documents, audit log/verify/export, users,
+  health; `scripts/create_admin.py` and `scripts/setup.py`.
+- **Measured** (pytest --cov, backend/): 818 tests collected, all passing; coverage 91 % overall,
+  100 % on `audit/` (done criteria: ≥ 80 % and 100 %). `/docs` lists every Tier 1 endpoint.
+  Not yet done: a run against the real index and Ollama (the training job was using the memory).
+- Decisions worth knowing:
+  1. History has no table: it IS the QUERY / QUERY_FAILED audit events, so it cannot disagree
+     with the audit trail. The audit event is written before the `done` SSE event; if the browser
+     disconnects, a `completed: false` event is written in a `finally` block.
+  2. Service functions return statuses rather than raising, so failure counters and session
+     revocations are committed instead of rolled back with the request.
+  3. `USER_UNLOCKED` is not in the §14.2 catalogue but FR-11 needs unlocking; it is recorded
+     as proposed amendment A-04 and PROJECT_SPEC.md has NOT been edited.
+  4. There is no `GET /conversations`: the UI derives the list from `/history` (§16 lists none).
+  5. The client IP in the audit trail comes from uvicorn's proxy headers; M9 must start uvicorn
+     with `--proxy-headers --forwarded-allow-ips` for the Caddy container.
+  6. CSV export, document upload and withdrawal are Tier 2 and not built.
+- Mistake caught: a setup-script test wrote into the real `corpus/manifest.yaml` (the `settings`
+  fixture points at the real corpus). Restored from git; that test file now uses a temporary
+  corpus directory.
+- Explain-it: a permission is checked by the server on every call, never by hiding a menu; the
+  chain hash covers the previous row's hash, so editing any row breaks every later link and
+  `verify()` names the first broken `seq`; refresh tokens rotate so a stolen copy is detected
+  the moment both copies are used.

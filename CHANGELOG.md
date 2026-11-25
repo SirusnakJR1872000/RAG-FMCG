@@ -19,3 +19,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Cross-encoder reranker and D-13 benchmark; `cross-encoder/ms-marco-MiniLM-L-6-v2` confirmed (M4).
 - UI prototype (`docs/prototype/`): offline landing page and chat screen with real retrieval data; `scripts/prototype_data.py` exports its data.
 - Generation: Ollama client, grounded prompt, citation check, follow-up rewriter, `RagPipeline` and a streaming CLI (`backend/cli.py`); relevance threshold τ = -5.34; measured latency and memory in `reports/` (M5).
+- Backend API: authentication (Argon2id, JWT + rotating refresh cookie, lockout), role-based permissions, hash-chained audit trail with verification and JSON export, query endpoints (blocking and streaming) behind a one-at-a-time LLM queue, history, feedback, document registry, user administration, health; `scripts/create_admin.py` and `scripts/setup.py` (M7).
