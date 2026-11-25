@@ -179,6 +179,10 @@ def pick_chunks(eligible: list[str], limit: int = 0, sample: int = 0) -> list[st
     return eligible[:limit] if limit else eligible
 
 
+# Found on the first full run: Ollama keeps the processed prompt of every request, and with 500+
+# different chunk prompts its runner grew to 8.4 GB for a 2.5 GB model, pushed the laptop into
+# swap and finally answered HTTP 500. Unloading the model drops that cache; it reloads in seconds.
+RECYCLE_EVERY = 40
 RETRIES = 4  # a 3-hour job must not die on one HTTP 500 (the runner restarts under memory pressure)
 RETRY_WAIT_SECONDS = 20
 
@@ -209,16 +213,20 @@ def read_raw(path: Path) -> list[dict]:
 
 
 async def generate(settings: Settings, chunks: pd.DataFrame, eligible: list[str], raw_path: Path,
-                   ) -> int:
-    """Ask llama3.2:3b for questions; append one JSON line per chunk. Returns chunks done."""
+                   *, big: OllamaClient | None = None, small: OllamaClient | None = None,
+                   recycle_every: int = RECYCLE_EVERY) -> int:
+    """Ask llama3.2:3b for questions; append one JSON line per chunk. Returns chunks done.
+
+    The clients can be passed in (tests use a fake Ollama).
+    """
     done = {row["chunk_id"] for row in read_raw(raw_path)}
     todo = [cid for cid in eligible if cid not in done]
     print(f"{len(done)} chunks already done, {len(todo)} to go", flush=True)
     if not todo:
         return 0
     text = chunks.set_index("chunk_id")["embed_text"]
-    big = OllamaClient(settings)  # free the RAM of the answer model before loading the small one
-    small = OllamaClient(settings, model=settings.question_gen_model)
+    big = big or OllamaClient(settings)  # its RAM is freed before the small model is loaded
+    small = small or OllamaClient(settings, model=settings.question_gen_model)
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     started, finished = time.perf_counter(), 0
     try:
@@ -235,6 +243,8 @@ async def generate(settings: Settings, chunks: pd.DataFrame, eligible: list[str]
             rate = (time.perf_counter() - started) / i
             print(f"  {i}/{len(todo)}  {len(row['questions'])} questions  {chunk_id[:46]:46}  "
                   f"ETA {rate * (len(todo) - i) / 60:.0f} min", flush=True)
+            if i % recycle_every == 0:
+                await small.unload()  # see RECYCLE_EVERY
         await small.unload()
     except OllamaError as exc:
         print(f"\n[{exc.code}] {exc}\nProgress is saved; run the same command again to continue.")

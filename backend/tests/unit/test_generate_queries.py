@@ -13,6 +13,7 @@ from src.finetuning.generate_queries import (
     build_prompt,
     chat_with_retry,
     filter_questions,
+    generate,
     leaked_chunk_ids,
     normalise,
     parse_questions,
@@ -202,3 +203,24 @@ async def test_a_permanent_failure_is_raised_after_the_retries():
         await chat_with_retry(small_client(fake), "s", "u", retries=2, sleep=no_sleep)
     assert len(fake.paths) == 3  # the first try and two retries
     assert issubclass(LLMUnavailable, OllamaError)
+
+
+async def test_the_model_is_unloaded_every_n_chunks_to_bound_ollamas_memory(tmp_path):
+    chunks = pd.DataFrame({"chunk_id": [f"c{i}" for i in range(7)],
+                           "embed_text": [f"text {i}" for i in range(7)]})
+    big_fake = FakeOllama()
+    small_fake = FakeOllama(answer="What does this chunk say about records?\n"
+                                   "How long are records kept in the archive?")
+    raw = tmp_path / "raw.jsonl"
+    done = await generate(SETTINGS, chunks, list(chunks["chunk_id"]), raw,
+                          big=OllamaClient(SETTINGS, transport=big_fake.transport()),
+                          small=small_client(small_fake), recycle_every=3)
+    assert done == 7 and len(read_raw(raw)) == 7
+    unloads = [c for c in small_fake.generate_calls if c["keep_alive"] == 0]
+    assert len(unloads) == 3  # after chunk 3, after chunk 6, and once more at the end
+    assert [c["keep_alive"] for c in big_fake.generate_calls] == [0]  # answer model freed first
+    # resuming skips finished chunks and does not touch Ollama when nothing is left
+    again = await generate(SETTINGS, chunks, list(chunks["chunk_id"]), raw,
+                           big=OllamaClient(SETTINGS, transport=big_fake.transport()),
+                           small=small_client(small_fake), recycle_every=3)
+    assert again == 0 and len(small_fake.requests) == 7
