@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Design tokens (docs/UI_AND_SYSTEM_OVERVIEW.md §9.2). Components use these names, never raw hex. */
+@theme {
+  --color-canvas: #ecf0fa;
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--color-slate-50);
+  --color-line: var(--color-slate-200);
+  --color-primary: var(--color-blue-600);
+  --color-primary-hover: var(--color-blue-700);
+  --color-primary-subtle: var(--color-blue-100);
+  --color-primary-ink: var(--color-blue-700);
+  --color-ink: var(--color-slate-900);
+  --color-muted: var(--color-slate-500);
+  --color-success-bg: var(--color-green-50);
+  --color-success: var(--color-green-700);
+  --color-warning-bg: var(--color-amber-50);
+  --color-warning: var(--color-amber-600);
+  --color-warning-ink: var(--color-amber-800);
+  --color-danger-bg: var(--color-red-50);
+  --color-danger: var(--color-red-700);
+  --color-info-bg: var(--color-slate-100);
+  --color-info: var(--color-slate-700);
+  --color-fictional-bg: var(--color-violet-50);
+  --color-fictional: var(--color-violet-700);
+
+  /* on-premise: system fonts only, no font CDN (§9.2) */
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
+  font-size: 15px;
+  background-image: radial-gradient(1200px 500px at 100% 0%, rgb(37 99 235 / 0.08), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* visible focus everywhere (§9 accessibility) */
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.cursor-blink::after { content: "▍"; margin-left: 1px; color: var(--color-primary); animation: blink 1s steps(1) infinite; }
+
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.progress-slide { animation: slide 1.6s ease-in-out infinite; }

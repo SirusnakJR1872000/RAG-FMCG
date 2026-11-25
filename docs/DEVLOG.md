@@ -191,3 +191,51 @@
   their own chunk, which the model learned; it does not measure ranking among near-duplicate
   GMP passages for human questions. Likely causes: llama3.2:3b questions copy the chunk's words,
   and 1,594 pairs from 617 chunks over-fit a 33M-parameter model. The reranker hides the damage.
+
+## 2026-11-25 — M8: React frontend
+
+- Built (spec §5.1, §17, §18; design brief §4–§9): Vite + React 19 + React Router + Tailwind v4
+  with the §9.2 tokens; login, forced/voluntary password change, app shell (role-filtered nav,
+  status pill, user menu, integrity/system/session-expiry banners, toasts), Chat (conversation
+  list, streaming answer in all 11 states, clickable citations, source panel, feedback, copy),
+  History (filters, detail drawer with "Superseded" tags), Documents (summary strip, filters,
+  detail drawer with SHA-256 and version history), Audit (integrity panel + Verify now, grouped
+  event filters, detail drawer with readable payload / raw JSON / hashes, JSON export with
+  confirmation), Users (add with one-time temporary password, change role, unlock, deactivate),
+  System health drawer (admin).
+- Packages: only those in START_HERE M8 (plus what the Vite template brings). Icons are inline
+  SVG, fonts are the system stack: no icon library, no font CDN (§9.2, on-premise).
+- **Measured:** Vitest 37 tests (stream parser incl. every chunk split, silent refresh incl.
+  one shared refresh for parallel 401s, the answer state machine, menus by role, Users guards);
+  Playwright 2 tests against the real API with the fake pipeline (`backend/tests/e2e_server.py`):
+  viewer asks → sources then streamed answer → citation highlights its source → feedback →
+  History; qa_user and auditor see only their menus; auditor sees the QUERY event and verifies
+  the chain; admin sees all menus; a reload restores the session from the cookie; sign-out
+  revokes it. Production bundle 343 kB JS (105 kB gzip).
+- Decisions:
+  1. Access token in memory only; parallel 401s share ONE refresh call, because refresh tokens
+     rotate and a second use of the old one would trip the server's reuse detection (§13.1).
+  2. The conversation list is built from `GET /history` (no conversations endpoint, §16).
+  3. The auditor's integrity panel says "not checked yet" until they press Verify now, because
+     the last result is in `/health/details`, which is admin-only; verifying is itself audited.
+  4. Non-admins see three summary cards on Documents: the index build date and embedding model
+     come from `/health/details` (admin-only), so for others the third card is "Last ingested".
+  5. Two oxlint rules are off: `only-export-components` (dev hot-reload only; pages export small
+     helpers the tests use) and `set-state-in-effect` (the "reset to loading, then fetch" pattern).
+- Dev setup: the backend's `SITE_ORIGIN` must be `http://localhost:5173` when using the Vite dev
+  server, or refresh and logout are refused (Origin check, §13.1). Documented in `.env.example`.
+
+## 2026-11-25 — Public landing page (proposed amendment A-05)
+
+- **Owner's decision (2026-11-25):** build the prototype's landing page in the React app as a
+  public `/welcome` page. This departs from PROJECT_SPEC §18.1 (no landing route) and design
+  brief §9.1 / §9.3 #13 ("Not built"); recorded here as proposed amendment **A-05**.
+  PROJECT_SPEC.md has NOT been edited.
+- Behaviour: a signed-out visit to `/` goes to `/welcome`; deep links (e.g. `/history`) still go
+  to `/login`; signed-in users still land on Chat (auditors on Audit). No spec route changed.
+- Content rule chosen by the owner: accurate claims only. "Request Demo" → "Sign in"; FMCG/GMA
+  shown only with a "Roadmap" tag; compliance worded "designed to support"; the chat picture is
+  captioned "Illustration". The document list mirrors corpus/manifest.yaml and a Vitest test fails
+  if they drift (the page is public, so it cannot call the authenticated /api/documents).
+- Photos: the prototype's crops of the owner's mockups (`docs/images/`), copied to
+  `frontend/public/landing/`.
